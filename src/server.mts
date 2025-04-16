@@ -36,7 +36,13 @@ app.use(async (c, next) => {
   await next();
 });
 
-app.use(cors());
+app.use(cors(
+  {
+    origin: ["https://langgraph-agent-chat-ui.onrender.com"],
+    allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowHeaders: ['Content-Type', 'Authorization']
+  }
+));
 app.use(requestLogger());
 app.get("/info", (c) => c.json({ flags: { assistants: true, crons: false } }));
 
