@@ -3,12 +3,12 @@ import { config } from "dotenv";
 
 config()
 
-import path from "path";
-import { cwd } from "process";
+// import path from "path";
+// import { cwd } from "process";
 
-config();
+// config();
 
-const configPath = path.resolve(cwd(), "langgraph.json");
+// const configPath = path.resolve(cwd(), "langgraph.json");
 
 // Leer variables del .env y del entorno
 // const env = {
@@ -22,14 +22,17 @@ const configu = StartServerSchema.parse({
   host: "0.0.0.0",
   nWorkers: 1,
   cwd: process.cwd(),
-  graphs: {
-    default: process.env.LANGGRAPH_CONFIG || configPath,
-  },
+  graphs:{
+    "agent": "./src/graph.ts:workflow",
+    "naturgy": "./src/graph/naturgy.ts:workflow",
+    "zentrum": "./src/zentrum.ts:workflow"
+
+},
   auth: {
     disable_studio_auth: true,
   },
   ui: {
-    default: process.env.LANGGRAPH_CONFIG || configPath,
+    default: "",
   },
   ui_config: {
     shared: [], // Podés agregar aquí los campos del estado que querés mostrar
