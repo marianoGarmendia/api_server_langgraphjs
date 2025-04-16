@@ -5,9 +5,8 @@
         "."
     ],
     "graphs": {
-        "agent": "./src/graph.ts:workflow",
-        "naturgy": "./src/graph/naturgy.ts:workflow",
-        "zentrum": "./src/zentrum.ts:workflow"
+        "agent": "./src/graph.ts:workflow"
+       
 
     },
     "env": "./.env"

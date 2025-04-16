@@ -23,9 +23,9 @@ const configu = StartServerSchema.parse({
   nWorkers: 1,
   cwd: process.cwd(),
   graphs:{
-    "agent": "./src/graph.ts:workflow",
+   
     "naturgy": "./src/graph/naturgy.ts:workflow",
-    "zentrum": "./src/zentrum.ts:workflow"
+  
 
 },
   auth: {
