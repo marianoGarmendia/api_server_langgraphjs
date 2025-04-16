@@ -1,8 +1,11 @@
 import { startServer, StartServerSchema } from "./server.mjs";
 import { config } from "dotenv";
+import { resolve } from 'path';
 
 
 config()
+
+const configPath = resolve(__dirname, '../langgraph.json');
 
 // Leer variables del .env y del entorno
 // const env = {
@@ -17,13 +20,13 @@ const configu = StartServerSchema.parse({
   nWorkers: 1,
   cwd: process.cwd(),
   graphs: {
-    default: process.env.LANGGRAPH_CONFIG || "../langgraph.json",
+    default: process.env.LANGGRAPH_CONFIG || configPath,
   },
   auth: {
     disable_studio_auth: true,
   },
   ui: {
-    default: process.env.LANGGRAPH_CONFIG || "../langgraph.json",
+    default: process.env.LANGGRAPH_CONFIG || configPath,
   },
   ui_config: {
     shared: [], // Podés agregar aquí los campos del estado que querés mostrar
