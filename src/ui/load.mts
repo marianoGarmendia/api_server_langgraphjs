@@ -63,7 +63,15 @@ api.get("/ui/:agent/:basename", async (c) => {
   const file = GRAPH_UI[agent]?.find((item) => item.basename === basename);
   if (!file) return c.text("File not found", 404);
 
+  let mime = getMimeType(file.basename);
+  if (!mime) {
+    const ext = path.extname(file.basename);
+    if (ext === ".css") mime = "text/css";
+    else if (ext === ".js") mime = "application/javascript";
+    else mime = "application/octet-stream";
+  }
+
   return c.body(file.contents as unknown as ArrayBuffer, {
-    headers: { "Content-Type": getMimeType(file.basename) ?? "text/plain" },
+    headers: { "Content-Type": mime },
   });
 });
