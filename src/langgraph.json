@@ -1,7 +1,7 @@
 {
   "node_version": "20",
   "graphs": {
-    "naturgy": "./naturgy.js:workflow"
+    "naturgy": "./dist/graph/naturgy.js:workflow"
   },
   "ui": {
     "agent": "./agent/ui.tsx"

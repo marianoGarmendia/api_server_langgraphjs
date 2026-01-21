@@ -1,4 +1,4 @@
-import { z } from "zod";
+// import { z } from "zod";
 
 import * as uuid from "uuid";
 import { Assistants } from "../storage/ops.mjs";
@@ -31,7 +31,7 @@ export const NAMESPACE_GRAPH = uuid.parse(
   "6ba7b821-9dad-11d1-80b4-00c04fd430c8",
 );
 
-const ConfigSchema = z.record(z.record(z.unknown()));
+// const ConfigSchema = z.record(z.record(z.unknown()));
 
 export const getAssistantId = (graphId: string) => {
   if (graphId in GRAPHS) return uuid.v5(graphId, NAMESPACE_GRAPH);
@@ -43,7 +43,16 @@ export async function registerFromEnv(
   options: { cwd: string },
 ) {
   const envConfig = process.env.LANGGRAPH_CONFIG
-    ? ConfigSchema.parse(JSON.parse(process.env.LANGGRAPH_CONFIG))
+    ? {
+        node_version: "20",
+       
+        dependencies: ["."],
+        graphs: {
+          naturgy: "./dist/graph/naturgy.js",
+        },
+
+        env: "./.env",
+      } as any
     : undefined;
 
   return await Promise.all(
@@ -52,7 +61,7 @@ export async function registerFromEnv(
         graph_id: graphId,
       });
 
-      const config = envConfig?.[graphId];
+      const config =envConfig?.[graphId] ;
       const { resolved, ...spec } = await resolveGraph(rawSpec, {
         cwd: options.cwd,
       });

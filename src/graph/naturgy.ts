@@ -10,7 +10,7 @@ import { ChatOpenAI } from "@langchain/openai";
 
 import { StateGraph, Command, END } from "@langchain/langgraph";
 import {
-  MemorySaver,
+ 
   Annotation,
   MessagesAnnotation,
 } from "@langchain/langgraph";
@@ -135,7 +135,7 @@ const get_seduvi = tool(
   async ({ alcaldia, calle, colonia, numero }, config) => {
     const baseUrl = "https://faceapp_test.techbank.ai:4002/public/places";
     // let config = { configurable: { thread_id: thread_id } };
-    const state = await workflow.getState({
+    const state = await grapho.getState({
       configurable: { thread_id: config.configurable.thread_id },
     });
 
@@ -246,7 +246,7 @@ const isVisited = tool(
   ) => {
     // let config = { configurable: { thread_id: thread_id } };
 
-    const state = await workflow.getState({
+    const state = await grapho.getState({
       configurable: { thread_id: config.configurable.thread_id },
     });
 
@@ -654,9 +654,12 @@ graph
 // .addEdge("agent", "delete_messages")
 // .addEdge("delete_messages", "__end__")
 
-const checkpointer = new MemorySaver();
+// const checkpointer = new MemorySaver();
 
-export const workflow = graph.compile({ checkpointer });
+export const grapho = graph.compile();
+
+export const workflow = grapho;
+
 // let config = { configurable: { thread_id: "123" } };
 
 // const response = await workflow.invoke({messages:"dame las noticias ams relevantes de este 2025"}, config)

@@ -1,5 +1,6 @@
 import { startServer, StartServerSchema } from "./server.mjs";
 import { config } from "dotenv";
+import fs from "fs/promises";
 
 config()
 
@@ -16,28 +17,25 @@ config()
 //   ...parse(resolve(__dirname, ".env")),
 // };
 
+const configPath = process.env.LANGGRAPH_CONFIG || "./langgraph.json";
+const configJson = await fs.readFile(configPath, "utf-8");
+const configo = JSON.parse(configJson);
+
 // Validar y estructurar la configuración
 const configu = StartServerSchema.parse({
-  port: Number(process.env.PORT) || 8080,
-  host: "0.0.0.0",
-  nWorkers: 1,
-  cwd: process.cwd(),
-  graphs:{
-   
-    "naturgy": "./src/graph/naturgy.ts:workflow",
-  
-
-},
-  auth: {
-    disable_studio_auth: true,
-  },
-  ui: {
-    default: "",
-  },
-  ui_config: {
-    shared: [], // Podés agregar aquí los campos del estado que querés mostrar
-  },
-});
+    port: Number(process.env.PORT) || 8080,
+    host: "0.0.0.0",
+    nWorkers: 1,
+    cwd: process.cwd(),
+    graphs: configo.graphs,
+    auth: {
+      disable_studio_auth: true,
+    },
+    ui: configo.graphs,
+    ui_config: {
+      shared: [],
+    },
+  });
 
 // Iniciar el servidor
 await startServer(configu);
