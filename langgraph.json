@@ -9,5 +9,9 @@
        
 
     },
-    "env": "./.env"
+   
+      "env": {
+        "LANGGRAPH_CONFIG": "{\"agent\": {\"configurable\": {\"model_name\": \"openai\"}}}"
+      }
+ 
 }
