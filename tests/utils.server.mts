@@ -4,7 +4,13 @@ import { access, readFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { parse } from "dotenv";
 
-const argvConfigPath = process.argv.findLast((arg) => arg.endsWith(".json"));
+console.log("[env] has OPENAI_API_KEY?", Boolean(process.env.OPENAI_API_KEY));
+console.log(
+  "[env] openai-like keys:",
+  Object.keys(process.env).filter(k => k.toUpperCase().includes("OPENAI"))
+);
+
+const argvConfigPath = process.argv.find((arg) => arg.endsWith(".json"));
 const envConfigPath = process.env.LANGGRAPH_CONFIG_PATH;
 const defaultRootConfigPath = fileURLToPath(
   new URL("../langgraph.json", import.meta.url),
