@@ -27,7 +27,7 @@
   "scripts": {
     "clean": "node scripts/clean.mjs",
     "build": "node scripts/build.mjs",
-    "start": "node ./dist/start-server.js",
+    "start": "node --import tsx ./dist/start-server.js",
     "start:dev": "npx tsx ./src/start-server.ts",
     "prepack": "pnpm run build",
     "typecheck": "tsc --noEmit",
