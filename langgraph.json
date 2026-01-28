@@ -1,7 +1,8 @@
 {
   "node_version": "20",
   "graphs": {
-    "naturgy": "./naturgy.js:workflow"
+    "centenarian": "./tests/graphs/suplements_agent.ts:suplement_graph",
+    "conversational": "./tests/graphs/conversational_agent.ts:conversationalAgent"
   },
   "ui": {
     "agent": "./agent/ui.tsx"

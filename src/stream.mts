@@ -161,7 +161,7 @@ export async function* streamState(
 
   const libStreamMode: Set<LangGraphStreamMode> = new Set(
     userStreamMode.filter(
-      (mode) => mode !== "events" && mode !== "messages-tuple",
+      (mode) => mode !== "events" && mode !== "messages-tuple" && mode !== "custom",
     ) ?? [],
   );
 

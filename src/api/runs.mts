@@ -50,11 +50,23 @@ const createValidRun = async (
   const { auth, headers } = kwargs;
   const runId = uuid4();
 
-  const streamMode = Array.isArray(payload.stream_mode)
+  const rawStreamMode = Array.isArray(payload.stream_mode)
     ? payload.stream_mode
     : payload.stream_mode != null
       ? [payload.stream_mode]
       : [];
+  const allowedStreamModes = new Set([
+    "values",
+    "messages",
+    "messages-tuple",
+    "updates",
+    "events",
+    "debug",
+    "custom",
+  ]);
+  const streamMode = rawStreamMode.filter(
+    (m): m is string => typeof m === "string" && allowedStreamModes.has(m),
+  );
   if (streamMode.length === 0) streamMode.push("values");
 
   const multitaskStrategy = payload.multitask_strategy ?? "reject";

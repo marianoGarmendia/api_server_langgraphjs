@@ -1,6 +1,6 @@
 // import { PDFLoader } from "@langchain/community/document_loaders/fs/pdf";
 import { OpenAIEmbeddings } from "@langchain/openai";
-import { MemoryVectorStore } from "langchain/vectorstores/memory";
+import { MemoryVectorStore } from "@langchain/community/vectorstores/memory";
 // import { TavilySearchResults } from "@langchain/community/tools/tavily_search";
 import { ChatOpenAI } from "@langchain/openai";
 

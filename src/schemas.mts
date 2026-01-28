@@ -198,30 +198,9 @@ export const RunCreate = z
     multitask_strategy: z
       .enum(["reject", "rollback", "interrupt", "enqueue"])
       .optional(),
-    stream_mode: z
-      .union([
-        z.array(
-          z.enum([
-            "values",
-            "messages",
-            "messages-tuple",
-            "updates",
-            "events",
-            "debug",
-            "custom",
-          ]),
-        ),
-        z.enum([
-          "values",
-          "messages",
-          "messages-tuple",
-          "updates",
-          "events",
-          "debug",
-          "custom",
-        ]),
-      ])
-      .optional(),
+    // NOTE: Some clients may send newer/extra stream modes (e.g. "custom").
+    // We accept string(s) here and then sanitize to supported modes in the API handler.
+    stream_mode: z.union([z.string(), z.array(z.string())]).optional(),
     stream_subgraphs: z.boolean().optional(),
     after_seconds: z.number().optional(),
     if_not_exists: z.enum(["reject", "create"]).optional(),
