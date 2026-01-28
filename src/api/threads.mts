@@ -7,6 +7,7 @@ import * as schemas from "../schemas.mjs";
 import { type RunnableConfig, Threads } from "../storage/ops.mjs";
 import { z } from "zod";
 import { stateSnapshotToThreadState } from "../state.mjs";
+import { logger } from "../logging.mjs";
 import { jsonExtra } from "../utils/hono.mjs";
 import { cors } from 'hono/cors';
 
@@ -17,6 +18,7 @@ api.use('*', cors({
   origin: (origin) => {
     // Allow requests from localhost:5173 and your Dev Tunnel URL
     const allowedOrigins = [
+      'http://localhost:3000',
       'http://localhost:5173',
       'https://72jdmlb6-5000.brs.devtunnels.ms'
     ];
@@ -232,7 +234,9 @@ api.get(
       { limit, before },
       c.var.auth,
     );
-    return jsonExtra(c, states.map(stateSnapshotToThreadState));
+    const history = states.map(stateSnapshotToThreadState);
+    logger.info("Thread history (GET)", { thread_id, count: history.length, history });
+    return jsonExtra(c, history);
   },
 );
 
@@ -264,8 +268,8 @@ api.post(
       { limit, before, metadata },
       c.var.auth,
     );
-
-    return jsonExtra(c, states.map(stateSnapshotToThreadState));
+    const history = states.map(stateSnapshotToThreadState);
+    return jsonExtra(c, history);
   },
 );
 

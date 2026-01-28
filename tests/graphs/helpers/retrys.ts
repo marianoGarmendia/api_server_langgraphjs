@@ -75,6 +75,8 @@ async function invokeStructuredWithRepair<T>({
 }): Promise<{ result: T | null; lastErr: unknown; lastErrText: string | null; lastRaw: string | null }> {
   const structured = model.withStructuredOutput(schema, { strict: true });
 
+  const structuredWithConfig = structured.withConfig({tags: ["nostream"]});
+
   let lastErr: unknown = null;
   let lastErrText: string | null = null;
   let lastRaw: string | null = null;
@@ -85,7 +87,7 @@ async function invokeStructuredWithRepair<T>({
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
-      const result = await structured.invoke(messages);
+      const result = await structuredWithConfig.invoke(messages);
       return { result: result as T, lastErr: null, lastErrText: null, lastRaw };
     } catch (err) {
       lastErr = err;

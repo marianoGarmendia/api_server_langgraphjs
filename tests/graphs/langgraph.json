@@ -1,14 +1,8 @@
 {
   "node_version": "20",
-  "graphs": {
-    "agent_custom": "./agent_custom.ts:workflow",
-    "naturgy": "./naturgy.ts:workflow",
-    "agent": "./agent.mts:graph",
-    "nested": "./nested.mts:graph",
-    "weather": "./weather.mts:graph",
-    "error": "./error.mts:graph",
-    "delay": "./delay.mts:graph",
-    "dynamic": "./dynamic.mts:graph"
+ "graphs": {
+ 
+    "conversational": "./conversational_agent.ts:conversationalAgent"
   },
   "ui": {
     "agent": "./agent/ui.tsx"

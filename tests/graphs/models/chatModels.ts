@@ -3,9 +3,9 @@ import dotenv from "dotenv";
 dotenv.config();
 
 
-export const buildModel = (modelName: string = "gpt-5") => {
+export const buildModel = (modelName: string = "gpt-5-mini") => {
   return new ChatOpenAI({
-    model: modelName,
+    model: "gpt-4o",
     apiKey: process.env.OPENAI_API_KEY,
   });
 };

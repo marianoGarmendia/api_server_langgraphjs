@@ -25,6 +25,7 @@ import { SystemMessage } from "@langchain/core/messages";
 import { Command } from "@langchain/langgraph";
 import { comprimedSchema } from "./schemas.js";
 import { z } from "zod";
+
 import { objetivo, composicion, restricciones, tipo_de_plato, practicidad, cocina } from "./constants/mealTags.js";
 import { buildPromptSelectWeeklyPlanCandidates } from "./prompts/selectWeeklyPlanCandidatesPrompt.js";
 import { comprimedPrompt } from "./prompts/comprimedPrompt.js";
@@ -162,10 +163,13 @@ export const determineIngredients = tool(
       const prompt = buildIngredientsPrompt(ids, query);
       // Evitamos `json_schema` en el request porque OpenAI puede rechazar schemas con `$ref` + metadata.
       const model = buildModel("gpt-4o");
+     
       const structuredModel = model.withStructuredOutput(schema, {
         strict: true,
       });
-      const response = await structuredModel.invoke(prompt);
+
+      const structuredModelWithConfig = structuredModel.withConfig({tags: ["nostream"]});
+      const response = await structuredModelWithConfig.invoke(prompt);
       return response;
     } catch (error) {
       console.error("Error al determinar la query:", error);
@@ -592,7 +596,7 @@ ${String(input.prompt ?? "").trim()}
 const comprimedTool = tool(
   async (input: { context: any }) => {
     const model = buildModel("gpt-5-mini");
-    const fallbackModel = buildModel("gpt-5");
+    const fallbackModel = buildModel("gpt-5-mini");
     const prompt = comprimedPrompt(input.context);
     const result = await invokeWithRetry({
       model,

@@ -39,6 +39,7 @@ const flattenContext = (context: any, prefix = ""): string[] => {
 };
 
 export const formatContextForPrompt = (context: any) => {
+  console.log("context", context);
   if (!context || Object.keys(context).length === 0) {
     return "contexto vacío";
   }

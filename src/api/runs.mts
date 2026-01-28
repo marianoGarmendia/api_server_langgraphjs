@@ -7,7 +7,13 @@ import { getAssistantId } from "../graph/load.mjs";
 import { zValidator } from "@hono/zod-validator";
 import * as schemas from "../schemas.mjs";
 import { z } from "zod";
-import { type Run, type RunKwargs, Runs, Threads } from "../storage/ops.mjs";
+import {
+  type Run,
+  type RunKwargs,
+  type StreamMode,
+  Runs,
+  Threads,
+} from "../storage/ops.mjs";
 import { serialiseAsDict } from "../utils/serde.mjs";
 import {
   getDisconnectAbortSignal,
@@ -24,6 +30,8 @@ api.use('*', cors({
   origin: (origin) => {
     // Allow requests from localhost:5173 and your Dev Tunnel URL
     const allowedOrigins = [
+      
+      'http://localhost:3000',
       'http://localhost:5173',
       'https://72jdmlb6-5000.brs.devtunnels.ms'
     ];
@@ -55,7 +63,7 @@ const createValidRun = async (
     : payload.stream_mode != null
       ? [payload.stream_mode]
       : [];
-  const allowedStreamModes = new Set([
+  const allowedStreamModes: ReadonlySet<StreamMode> = new Set([
     "values",
     "messages",
     "messages-tuple",
@@ -64,9 +72,9 @@ const createValidRun = async (
     "debug",
     "custom",
   ]);
-  const streamMode = rawStreamMode.filter(
-    (m): m is string => typeof m === "string" && allowedStreamModes.has(m),
-  );
+  const isStreamMode = (m: unknown): m is StreamMode =>
+    typeof m === "string" && allowedStreamModes.has(m as StreamMode);
+  const streamMode = rawStreamMode.filter(isStreamMode);
   if (streamMode.length === 0) streamMode.push("values");
 
   const multitaskStrategy = payload.multitask_strategy ?? "reject";

@@ -1,16 +1,37 @@
 // run the server for CLI
 import { fileURLToPath } from "node:url";
-import { readFile } from "node:fs/promises";
+import { access, readFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { parse } from "dotenv";
 
-const configPath = fileURLToPath(
-  new URL(
-    process.argv.findLast((arg) => arg.endsWith(".json")) ??
-      "./graphs/langgraph.json",
-    import.meta.url,
-  ),
+const argvConfigPath = process.argv.findLast((arg) => arg.endsWith(".json"));
+const envConfigPath = process.env.LANGGRAPH_CONFIG_PATH;
+const defaultRootConfigPath = fileURLToPath(
+  new URL("../langgraph.json", import.meta.url),
 );
+const defaultTestConfigPath = fileURLToPath(
+  new URL("./graphs/langgraph.json", import.meta.url),
+);
+
+const pickFirstExistingPath = async (paths: Array<string | undefined>) => {
+  for (const candidate of paths) {
+    if (!candidate) continue;
+    try {
+      await access(candidate);
+      return candidate;
+    } catch {
+      // try next
+    }
+  }
+  return defaultTestConfigPath;
+};
+
+const configPath = await pickFirstExistingPath([
+  argvConfigPath,
+  envConfigPath,
+  defaultRootConfigPath,
+  defaultTestConfigPath,
+]);
 const config = JSON.parse(await readFile(configPath, "utf-8"));
 
 let env = {} as NodeJS.ProcessEnv;
@@ -34,21 +55,25 @@ const { spawnServer } = (
 //   { pid: process.pid, projectCwd: dirname(configPath) },
 // );
 
+const port = process.env.PORT ?? "5001";
+const host = process.env.HOST ?? "0.0.0.0";
+const hostUrl = process.env.HOST_URL ?? `http://localhost:${port}`;
+
 await spawnServer(
   {
-    port: "5000" ,
+    port,
     nJobsPerWorker: "10",
-    host: "0.0.0.0"
+    host,
   },
   {
     config,
     env,
-    hostUrl: "http://localhost:5000"
+    hostUrl,
   },
   {
     pid: process.pid,
-    projectCwd: dirname(configPath)
-  }
+    projectCwd: dirname(configPath),
+  },
 );
 
 // await spawnServer(

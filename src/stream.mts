@@ -1,5 +1,6 @@
 import type { Run, RunnableConfig, Checkpoint } from "./storage/ops.mjs";
 import { getGraph } from "./graph/load.mjs";
+import { checkpointer } from "./storage/checkpoint.mjs";
 import { Client as LangSmithClient } from "langsmith";
 import {
   type CheckpointMetadata,
@@ -154,7 +155,7 @@ export async function* streamState(
   }
 
   const graph = await getGraph(graphId, kwargs.config, {
-    checkpointer: kwargs.temporary ? null : undefined,
+    checkpointer: kwargs.temporary ? null : checkpointer,
   });
 
   const userStreamMode = kwargs.stream_mode ?? [];

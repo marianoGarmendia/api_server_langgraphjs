@@ -431,16 +431,36 @@ export async function upsertIngredientsByDescription(
 
   const ops = valid.map((d) => {
     const desc = d.bestMatch!.description;
+    const setDoc: Partial<IngredientDoc> = {
+      bestMatch: d.bestMatch ?? null,
+    };
+    const unsetDoc: Record<string, ""> = {};
+
+    if (d.totalHits !== null && d.totalHits !== undefined) {
+      setDoc.totalHits = d.totalHits;
+    } else {
+      unsetDoc.totalHits = "";
+    }
+
+    if (d.foodsReturned !== null && d.foodsReturned !== undefined) {
+      setDoc.foodsReturned = d.foodsReturned;
+    } else {
+      unsetDoc.foodsReturned = "";
+    }
+
+    const update: {
+      $set: Partial<IngredientDoc>;
+      $unset?: Record<string, "">;
+    } = { $set: setDoc };
+
+    if (Object.keys(unsetDoc).length > 0) {
+      update.$unset = unsetDoc;
+    }
+
     return {
       updateOne: {
         filter: { "bestMatch.description": desc },
-        update: {
-          $set: {
-            totalHits: d.totalHits ?? null,
-            foodsReturned: d.foodsReturned ?? null,
-            bestMatch: d.bestMatch ?? null,
-          },
-        },
+        update,
         upsert: true,
       },
     };

@@ -1,12 +1,11 @@
 {
   "node_version": "20",
+  "dependencies": ["."],
   "graphs": {
     "centenarian": "./tests/graphs/suplements_agent.ts:suplement_graph",
     "conversational": "./tests/graphs/conversational_agent.ts:conversationalAgent"
   },
-  "ui": {
-    "agent": "./agent/ui.tsx"
-  },
+ 
   "env": {
     "LANGGRAPH_CONFIG": "{\"agent\": {\"configurable\": {\"model_name\": \"openai\"}}}"
   }
