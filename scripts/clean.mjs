@@ -1,4 +1,5 @@
-#!/usr/bin/env bun
-import { $ } from "./utils.mjs";
+#!/usr/bin/env node
 
-await $`rm -rf dist`;
+import { rm } from "node:fs/promises";
+
+await rm("dist", { recursive: true, force: true });
