@@ -27,8 +27,7 @@
   "scripts": {
     "clean": "npx -y bun scripts/clean.mjs",
     "build": "npx -y bun scripts/build.mjs",
-    "dev": "npx tsx ./tests/utils.server.mts --dev",
-    "start": "node ./dist/start-server.js",
+    "start": "npx tsx ./tests/utils.server.mts --dev",
     "start:dev": "npx tsx ./tests/utils.server.mts --dev",
     "prepack": "pnpm run build",
     "typecheck": "tsc --noEmit",
