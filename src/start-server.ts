@@ -31,7 +31,8 @@ const configu = StartServerSchema.parse({
     auth: {
       disable_studio_auth: true,
     },
-    ui: configo.graphs,
+    // UI definitions come from `langgraph.json`'s `ui` section (not from `graphs`).
+    ui: configo.ui,
     ui_config: {
       shared: [],
     },
