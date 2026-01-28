@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { $ } from "./utils.mjs";
 
-import { copyFile, mkdir, readdir, rename, rm } from "node:fs/promises";
+import { copyFile, cp, mkdir, readdir, rename, rm } from "node:fs/promises";
 import { join } from "node:path";
 
 async function rimraf(path) {
@@ -18,13 +18,23 @@ async function moveChildren(srcDir, destDir) {
 
   await Promise.all(
     entries.map(async (entry) => {
-      await rename(join(srcDir, entry.name), join(destDir, entry.name));
+      const from = join(srcDir, entry.name);
+      const to = join(destDir, entry.name);
+      try {
+        await rename(from, to);
+      } catch (err) {
+        // Windows can throw EPERM on rename across certain FS conditions (AV/indexing).
+        // Fall back to copy+delete to keep the build robust.
+        await cp(from, to, { recursive: true, force: true });
+        await rimraf(from);
+      }
     }),
   );
 }
 
 await rimraf("dist");
-await $`pnpm tsc --outDir dist`;
+// Compile into dist/src so later move-to-dist is collision-free.
+await $`pnpm tsc --outDir dist/src`;
 await $`pnpm tsc --module nodenext --outDir dist/src/cli -d src/cli/spawn.mts`;
 await $`pnpm tsc --module nodenext --outDir dist/src/auth -d src/auth/index.mts`;
 
