@@ -319,7 +319,13 @@ const SearchInput = z.object({
 export const infoPalasKombat = tool(
   async (input, config: LangGraphRunnableConfig) => {
     const { client, collection } = await getMongo();
-    const { orgId, agentId, title } = config.configurable as any;
+    // const { orgId, agentId, title } = config.configurable as any;
+    // console.log("orgId", orgId);
+    // console.log("agentId", agentId);
+    // console.log("title", title);
+    const orgId = "kombatpadel";
+    const agentId = "agent_wsp";
+    const title = "como_elegir_palas_kombat";
     try {
       const vectorStore = await getVectorStore(collection);
 

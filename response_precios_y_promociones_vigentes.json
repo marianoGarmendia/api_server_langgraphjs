@@ -1,0 +1,47 @@
+{
+  "lc": 1,
+  "type": "constructor",
+  "id": [
+    "langchain_core",
+    "messages",
+    "AIMessageChunk"
+  ],
+  "kwargs": {
+    "content": "CANAL: Tienda Oficial KOMBAT\n\nTienda Oficial: Palas Línea Vulcano (ETNA / TEIDE / Krakatoa / Osorno / Vesubio) 35% OFF → 279.500 (antes 430.000).\nComprá en: www.kombatpadel.com.ar\nPago contado: transferencia / débito / crédito (1 cuota) / efectivo. (Sin cuotas sin interés.)",
+    "additional_kwargs": {},
+    "response_metadata": {
+      "usage": {
+        "prompt_tokens": 2324,
+        "completion_tokens": 3551,
+        "total_tokens": 5875,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 3456,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    "tool_call_chunks": [],
+    "id": "chatcmpl-D4bMcquCVaxBEa3OyMsCt37WHQqO6",
+    "usage_metadata": {
+      "input_tokens": 2324,
+      "output_tokens": 3551,
+      "total_tokens": 5875,
+      "input_token_details": {
+        "audio": 0,
+        "cache_read": 0
+      },
+      "output_token_details": {
+        "audio": 0,
+        "reasoning": 3456
+      }
+    },
+    "tool_calls": [],
+    "invalid_tool_calls": []
+  }
+}

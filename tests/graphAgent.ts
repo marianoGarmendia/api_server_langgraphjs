@@ -13,6 +13,7 @@ import {
   END,
   MemorySaver,
 } from "@langchain/langgraph";
+import { systemPromptV2 } from "./prompts.js";
 
 import { priceTool, infoCatalogoVulcano, infoPalasKombat } from "./tools.js";
 
@@ -37,20 +38,21 @@ const MessagesState = Annotation.Root({
 const llmCall = async (state: typeof MessagesState.State) => {
   const { messages } = state;
 
-  const sysMessage =
-    new SystemMessage(` Sos un asistente RAG. Para preguntas sobre el PDF, SIEMPRE llamá a kb_search antes de responder.,
-        "Luego respondé usando SOLO el contexto retornado por la tool y citá pageNumber si está disponible en metadata.loc.pageNumber.,`);
+  const sysMessage = new SystemMessage(systemPromptV2);
+    
 
   const response = await modelWithTools.invoke([sysMessage, ...messages]);
+  console.log("response", response);
   return { messages: [response] };
 };
 
 const toolNode = new ToolNode(tools);
 
 const shouldContinue = (state: typeof MessagesState.State) => {
-  const last = state.messages.at(-1);
-  if (!last || !(last instanceof AIMessage)) return END;
-  return last.tool_calls?.length ? "toolNode" : END;
+  const last = state.messages.at(-1) as AIMessage;
+  // if (!last || !(last instanceof AIMessage)) return END;
+  console.log("last", last);
+  return last?.tool_calls?.length ? "toolNode" : END;
 };
 
 const graphKombat = new StateGraph(MessagesState)
