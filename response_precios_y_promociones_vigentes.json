@@ -7,19 +7,19 @@
     "AIMessageChunk"
   ],
   "kwargs": {
-    "content": "CANAL: Tienda Oficial KOMBAT\n\nTienda Oficial: Palas Línea Vulcano (ETNA / TEIDE / Krakatoa / Osorno / Vesubio) 35% OFF → 279.500 (antes 430.000).\nComprá en: www.kombatpadel.com.ar\nPago contado: transferencia / débito / crédito (1 cuota) / efectivo. (Sin cuotas sin interés.)",
+    "content": "Bancos - Banco Provincia (Provincia Compras)\n\n- BP1 (Febrero) — Pampa & Hunter\n  - Cuotas: 6 sin interés\n  - Desde: $46.583 / cuota\n  - Exclusivo clientes Banco Provincia\n  - Comprar: https://www.provinciacompras.com.ar/kombat077?map=seller\n\n- BP3 (10 al 12 de Febrero) — Pampa & Hunter\n  - Cuotas: 18 sin interés\n  - Desde: $20.306 / cuota\n  - Exclusivo clientes Banco Provincia\n  - Comprar: https://www.provinciacompras.com.ar/kombat077?map=seller",
     "additional_kwargs": {},
     "response_metadata": {
       "usage": {
-        "prompt_tokens": 2324,
-        "completion_tokens": 3551,
-        "total_tokens": 5875,
+        "prompt_tokens": 2322,
+        "completion_tokens": 1497,
+        "total_tokens": 3819,
         "prompt_tokens_details": {
-          "cached_tokens": 0,
+          "cached_tokens": 2176,
           "audio_tokens": 0
         },
         "completion_tokens_details": {
-          "reasoning_tokens": 3456,
+          "reasoning_tokens": 1344,
           "audio_tokens": 0,
           "accepted_prediction_tokens": 0,
           "rejected_prediction_tokens": 0
@@ -27,18 +27,18 @@
       }
     },
     "tool_call_chunks": [],
-    "id": "chatcmpl-D4bMcquCVaxBEa3OyMsCt37WHQqO6",
+    "id": "chatcmpl-D4bbGuekpZCn2nvd5WlivXODD1CJJ",
     "usage_metadata": {
-      "input_tokens": 2324,
-      "output_tokens": 3551,
-      "total_tokens": 5875,
+      "input_tokens": 2322,
+      "output_tokens": 1497,
+      "total_tokens": 3819,
       "input_token_details": {
         "audio": 0,
-        "cache_read": 0
+        "cache_read": 2176
       },
       "output_token_details": {
         "audio": 0,
-        "reasoning": 3456
+        "reasoning": 1344
       }
     },
     "tool_calls": [],

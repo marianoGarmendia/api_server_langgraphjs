@@ -21,55 +21,7 @@
         "title": "como_elegir_palas_kombat"
       }
     },
-    0.8674046993255615
-  ],
-  [
-    {
-      "pageContent": "Elegir pala no es solo una cuestión de\nforma o precio.\nEs elegir cómo quieres jugar, cuidarte\ny crecer en pista.\nINTRODUCCIÓN\nEn Kombat no te vamos a vender \"la\npala perfecta\".\nTe vamos a ayudar a entender cuál es\nperfecta para ti.\nEsta guía no es un test. Es un mapa.\nUna brújula para que elijas con\ncabeza... y con confianza.\nPorque cada jugador es único.\nY una buena decisión no se improvisa:\n”se prueba, se siente y se decide”.",
-      "metadata": {
-        "_id": "0ec22525-10c6-4cb0-a245-81bb7fec27a6:2",
-        "agentId": "agent_wsp",
-        "brand": null,
-        "category": "info_general",
-        "docId": "0ec22525-10c6-4cb0-a245-81bb7fec27a6",
-        "loc": {
-          "pageNumber": 3,
-          "lines": {
-            "from": 1,
-            "to": 15
-          }
-        },
-        "orgId": "kombatpadel",
-        "product": "palas_kombat",
-        "source": null,
-        "title": "como_elegir_palas_kombat"
-      }
-    },
-    0.8427451848983765
-  ],
-  [
-    {
-      "pageContent": "La mejor pala no es la más cara. Ni la más bonita. \nEs la que encaja contigo, con tu forma de jugar y de\nsentir la pista.\nEsta guía es tu primer paso.\nEl siguiente es vivirlo en la pista.",
-      "metadata": {
-        "_id": "0ec22525-10c6-4cb0-a245-81bb7fec27a6:12",
-        "agentId": "agent_wsp",
-        "brand": null,
-        "category": "info_general",
-        "docId": "0ec22525-10c6-4cb0-a245-81bb7fec27a6",
-        "loc": {
-          "pageNumber": 13,
-          "lines": {
-            "from": 1,
-            "to": 5
-          }
-        },
-        "orgId": "kombatpadel",
-        "product": "palas_kombat",
-        "source": null,
-        "title": "como_elegir_palas_kombat"
-      }
-    },
-    0.819993257522583
+    0.7950937151908875
   ],
   [
     {
@@ -93,7 +45,7 @@
         "title": "como_elegir_palas_kombat"
       }
     },
-    0.81136554479599
+    0.7880723476409912
   ],
   [
     {
@@ -117,22 +69,22 @@
         "title": "como_elegir_palas_kombat"
       }
     },
-    0.810856819152832
+    0.785682201385498
   ],
   [
     {
-      "pageContent": "ERRORES FRECUENTES\nComprar por diseño\no porque la lleva un \n jugador \nCopiar a tu amigo \nsin saber por qué \nle va bien a él\nUsar palas \ndemasiado duras \nsi aún no tienes \ntécnica\nElegir por precio\npensando que \n\"más cara = mejor\"\nNo tener en cuenta tu forma \nfísica o lesiones\nNo caigas en lo que hace todo el mundo:\n\n六‍欄‍六\n\n⚠\nTu pala no debe ser la de moda, debe ser\n la que te ayude a jugar mejor.\n\n",
+      "pageContent": "La mejor pala no es la más cara. Ni la más bonita. \nEs la que encaja contigo, con tu forma de jugar y de\nsentir la pista.\nEsta guía es tu primer paso.\nEl siguiente es vivirlo en la pista.",
       "metadata": {
-        "_id": "0ec22525-10c6-4cb0-a245-81bb7fec27a6:10",
+        "_id": "0ec22525-10c6-4cb0-a245-81bb7fec27a6:12",
         "agentId": "agent_wsp",
         "brand": null,
         "category": "info_general",
         "docId": "0ec22525-10c6-4cb0-a245-81bb7fec27a6",
         "loc": {
-          "pageNumber": 11,
+          "pageNumber": 13,
           "lines": {
             "from": 1,
-            "to": 25
+            "to": 5
           }
         },
         "orgId": "kombatpadel",
@@ -141,6 +93,54 @@
         "title": "como_elegir_palas_kombat"
       }
     },
-    0.8025819063186646
+    0.7766320109367371
+  ],
+  [
+    {
+      "pageContent": "¿QUÉ BALANCE DE PALAS NECESITAS?\nBAJO\nControl\nPotencia\nManejabilidad\nManejabilidad\nPotencia\nEquilibrio entre \ncontrol y potecia\nMEDIO\nALTO\nConoce las diferencias entre bajo, medio y alto.\nAhora que entiendes cómo afecta el balance, veamos cómo\nse relaciona con la forma de la pala.",
+      "metadata": {
+        "_id": "0ec22525-10c6-4cb0-a245-81bb7fec27a6:6",
+        "agentId": "agent_wsp",
+        "brand": null,
+        "category": "info_general",
+        "docId": "0ec22525-10c6-4cb0-a245-81bb7fec27a6",
+        "loc": {
+          "pageNumber": 7,
+          "lines": {
+            "from": 1,
+            "to": 14
+          }
+        },
+        "orgId": "kombatpadel",
+        "product": "palas_kombat",
+        "source": null,
+        "title": "como_elegir_palas_kombat"
+      }
+    },
+    0.7746562957763672
+  ],
+  [
+    {
+      "pageContent": "Elegir pala no es solo una cuestión de\nforma o precio.\nEs elegir cómo quieres jugar, cuidarte\ny crecer en pista.\nINTRODUCCIÓN\nEn Kombat no te vamos a vender \"la\npala perfecta\".\nTe vamos a ayudar a entender cuál es\nperfecta para ti.\nEsta guía no es un test. Es un mapa.\nUna brújula para que elijas con\ncabeza... y con confianza.\nPorque cada jugador es único.\nY una buena decisión no se improvisa:\n”se prueba, se siente y se decide”.",
+      "metadata": {
+        "_id": "0ec22525-10c6-4cb0-a245-81bb7fec27a6:2",
+        "agentId": "agent_wsp",
+        "brand": null,
+        "category": "info_general",
+        "docId": "0ec22525-10c6-4cb0-a245-81bb7fec27a6",
+        "loc": {
+          "pageNumber": 3,
+          "lines": {
+            "from": 1,
+            "to": 15
+          }
+        },
+        "orgId": "kombatpadel",
+        "product": "palas_kombat",
+        "source": null,
+        "title": "como_elegir_palas_kombat"
+      }
+    },
+    0.7643482685089111
   ]
 ]
