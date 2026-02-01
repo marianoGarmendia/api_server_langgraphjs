@@ -73,6 +73,22 @@ app.post(
 );
 
 app.use(auth());
+app.post(
+  "/custom/echo",
+  zValidator(
+    "json",
+    z.object({
+      question: z.string(),
+      metadata: z.record(z.string()).optional(),
+    }),
+  ),
+  (c) => {
+    const { question, metadata } = c.req.valid("json");
+    console.log("question", question);
+    console.log("metadata", metadata);
+    return c.json({ ok: true, question, metadata: metadata ?? {} });
+  },
+);
 app.route("/", assistants);
 app.route("/", runs);
 app.route("/", threads);
@@ -135,7 +151,9 @@ export async function startServer(options: z.infer<typeof StartServerSchema>) {
       serve(
         { fetch: app.fetch, port: options.port, hostname: options.host },
         (c) => {
-          resolve({ host: `${c.address}:${c.port}`, cleanup });
+          const host = `${c.address}:${c.port}`;
+          logger.info(`Server listening on http://${host}`);
+          resolve({ host, cleanup });
         },
       );
     },

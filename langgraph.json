@@ -5,7 +5,8 @@
   ],
   "graphs": {
     "centenarian": "./tests/graphs/suplements_agent.ts:suplement_graph",
-    "conversational": "./tests/graphs/conversational_agent.ts:conversationalAgent"
+    "conversational": "./tests/graphs/conversational_agent.ts:conversationalAgent",
+    "kombat": "./tests/graphAgent.ts:workflow"
   },
   "env": ".env"
 }

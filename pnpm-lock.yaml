@@ -19,7 +19,7 @@ importers:
         version: 0.2.2(hono@4.7.7)(zod@3.24.2)
       '@langchain/community':
         specifier: ^0.3.40
-        version: 0.3.40(@browserbasehq/sdk@2.5.0)(@browserbasehq/stagehand@1.14.0(@playwright/test@1.51.1)(deepmerge@4.3.1)(dotenv@16.5.0)(openai@4.94.0(ws@8.18.1)(zod@3.24.2))(zod@3.24.2))(@ibm-cloud/watsonx-ai@1.6.4(@langchain/core@0.3.44(openai@4.94.0(ws@8.18.1)(zod@3.24.2))))(@langchain/core@0.3.44(openai@4.94.0(ws@8.18.1)(zod@3.24.2)))(axios@1.8.4)(ibm-cloud-sdk-core@5.3.2)(jsonwebtoken@9.0.2)(mongodb@6.12.0)(openai@4.94.0(ws@8.18.1)(zod@3.24.2))(playwright@1.51.1)(ws@8.18.1)
+        version: 0.3.40(@browserbasehq/sdk@2.5.0)(@browserbasehq/stagehand@1.14.0(@playwright/test@1.51.1)(deepmerge@4.3.1)(dotenv@16.5.0)(openai@4.94.0(ws@8.18.1)(zod@3.24.2))(zod@3.24.2))(@ibm-cloud/watsonx-ai@1.6.4(@langchain/core@0.3.44(openai@4.94.0(ws@8.18.1)(zod@3.24.2))))(@langchain/core@0.3.44(openai@4.94.0(ws@8.18.1)(zod@3.24.2)))(axios@1.8.4)(ibm-cloud-sdk-core@5.3.2)(jsonwebtoken@9.0.2)(mongodb@6.21.0)(openai@4.94.0(ws@8.18.1)(zod@3.24.2))(playwright@1.51.1)(ws@8.18.1)
       '@langchain/core':
         specifier: ^0.3.42
         version: 0.3.44(openai@4.94.0(ws@8.18.1)(zod@3.24.2))
@@ -32,9 +32,15 @@ importers:
       '@langchain/langgraph-ui':
         specifier: ^0.0.22
         version: 0.0.22
+      '@langchain/mongodb':
+        specifier: ^1.1.0
+        version: 1.1.0(@langchain/core@0.3.44(openai@4.94.0(ws@8.18.1)(zod@3.24.2)))
       '@langchain/openai':
         specifier: ^0.5.5
         version: 0.5.5(@langchain/core@0.3.44(openai@4.94.0(ws@8.18.1)(zod@3.24.2)))(ws@8.18.1)
+      '@langchain/textsplitters':
+        specifier: 1.0.1
+        version: 1.0.1(@langchain/core@0.3.44(openai@4.94.0(ws@8.18.1)(zod@3.24.2)))
       '@types/json-schema':
         specifier: ^7.0.15
         version: 7.0.15
@@ -63,8 +69,8 @@ importers:
         specifier: ^0.2.15
         version: 0.2.15(openai@4.94.0(ws@8.18.1)(zod@3.24.2))
       mongodb:
-        specifier: 6.12.0
-        version: 6.12.0
+        specifier: 6.21.0
+        version: 6.21.0
       open:
         specifier: ^10.1.0
         version: 10.1.1
@@ -952,6 +958,12 @@ packages:
       zod-to-json-schema:
         optional: true
 
+  '@langchain/mongodb@1.1.0':
+    resolution: {integrity: sha512-oEshb4TekZVA05jpTIJdV6AEF1p4K4psg29JLTx7SuLXSSC3OYefDvbDf1W4MwK4bbiASqI5eE5qDfdz44U7jw==}
+    engines: {node: '>=20'}
+    peerDependencies:
+      '@langchain/core': ^1.0.0
+
   '@langchain/openai@0.5.5':
     resolution: {integrity: sha512-QwdZrWcx6FB+UMKQ6+a0M9ZXzeUnZCwXP7ltqCCycPzdfiwxg3TQ6WkSefdEyiPpJcVVq/9HZSxrzGmf18QGyw==}
     engines: {node: '>=18'}
@@ -963,6 +975,12 @@ packages:
     engines: {node: '>=18'}
     peerDependencies:
       '@langchain/core': '>=0.2.21 <0.4.0'
+
+  '@langchain/textsplitters@1.0.1':
+    resolution: {integrity: sha512-rheJlB01iVtrOUzttscutRgLybPH9qR79EyzBEbf1u97ljWyuxQfCwIWK+SjoQTM9O8M7GGLLRBSYE26Jmcoww==}
+    engines: {node: '>=20'}
+    peerDependencies:
+      '@langchain/core': ^1.0.0
 
   '@mongodb-js/saslprep@1.4.5':
     resolution: {integrity: sha512-k64Lbyb7ycCSXHSLzxVdb2xsKGPMvYZfCICXvDsI8Z65CeWQzTEKS4YmGbnqw+U9RBvLPTsB6UCmwkgsDTGWIw==}
@@ -1921,8 +1939,8 @@ packages:
   mongodb-connection-string-url@3.0.2:
     resolution: {integrity: sha512-rMO7CGo/9BFwyZABcKAWL8UJwH/Kc2x0g72uhDWzG48URRax5TCIcJ7Rc3RZqffZzO/Gwff/jyKwCU9TN8gehA==}
 
-  mongodb@6.12.0:
-    resolution: {integrity: sha512-RM7AHlvYfS7jv7+BXund/kR64DryVI+cHbVAy9P61fnb1RcWZqOW1/Wj2YhqMCx+MuYhqTRGv7AwHBzmsCKBfA==}
+  mongodb@6.21.0:
+    resolution: {integrity: sha512-URyb/VXMjJ4da46OeSXg+puO39XH9DeQpWCslifrRn9JWugy0D+DvvBvkm2WxmHe61O/H19JM66p1z7RHVkZ6A==}
     engines: {node: '>=16.20.1'}
     peerDependencies:
       '@aws-sdk/credential-providers': ^3.188.0
@@ -1930,7 +1948,7 @@ packages:
       gcp-metadata: ^5.2.0
       kerberos: ^2.0.1
       mongodb-client-encryption: '>=6.0.0 <7'
-      snappy: ^7.2.2
+      snappy: ^7.3.2
       socks: ^2.7.1
     peerDependenciesMeta:
       '@aws-sdk/credential-providers':
@@ -2686,7 +2704,7 @@ snapshots:
 
   '@jridgewell/sourcemap-codec@1.5.0': {}
 
-  '@langchain/community@0.3.40(@browserbasehq/sdk@2.5.0)(@browserbasehq/stagehand@1.14.0(@playwright/test@1.51.1)(deepmerge@4.3.1)(dotenv@16.5.0)(openai@4.94.0(ws@8.18.1)(zod@3.24.2))(zod@3.24.2))(@ibm-cloud/watsonx-ai@1.6.4(@langchain/core@0.3.44(openai@4.94.0(ws@8.18.1)(zod@3.24.2))))(@langchain/core@0.3.44(openai@4.94.0(ws@8.18.1)(zod@3.24.2)))(axios@1.8.4)(ibm-cloud-sdk-core@5.3.2)(jsonwebtoken@9.0.2)(mongodb@6.12.0)(openai@4.94.0(ws@8.18.1)(zod@3.24.2))(playwright@1.51.1)(ws@8.18.1)':
+  '@langchain/community@0.3.40(@browserbasehq/sdk@2.5.0)(@browserbasehq/stagehand@1.14.0(@playwright/test@1.51.1)(deepmerge@4.3.1)(dotenv@16.5.0)(openai@4.94.0(ws@8.18.1)(zod@3.24.2))(zod@3.24.2))(@ibm-cloud/watsonx-ai@1.6.4(@langchain/core@0.3.44(openai@4.94.0(ws@8.18.1)(zod@3.24.2))))(@langchain/core@0.3.44(openai@4.94.0(ws@8.18.1)(zod@3.24.2)))(axios@1.8.4)(ibm-cloud-sdk-core@5.3.2)(jsonwebtoken@9.0.2)(mongodb@6.21.0)(openai@4.94.0(ws@8.18.1)(zod@3.24.2))(playwright@1.51.1)(ws@8.18.1)':
     dependencies:
       '@browserbasehq/stagehand': 1.14.0(@playwright/test@1.51.1)(deepmerge@4.3.1)(dotenv@16.5.0)(openai@4.94.0(ws@8.18.1)(zod@3.24.2))(zod@3.24.2)
       '@ibm-cloud/watsonx-ai': 1.6.4(@langchain/core@0.3.44(openai@4.94.0(ws@8.18.1)(zod@3.24.2)))
@@ -2706,7 +2724,7 @@ snapshots:
     optionalDependencies:
       '@browserbasehq/sdk': 2.5.0
       jsonwebtoken: 9.0.2
-      mongodb: 6.12.0
+      mongodb: 6.21.0
       playwright: 1.51.1
       ws: 8.18.1
     transitivePeerDependencies:
@@ -2809,6 +2827,19 @@ snapshots:
       - react
       - react-dom
 
+  '@langchain/mongodb@1.1.0(@langchain/core@0.3.44(openai@4.94.0(ws@8.18.1)(zod@3.24.2)))':
+    dependencies:
+      '@langchain/core': 0.3.44(openai@4.94.0(ws@8.18.1)(zod@3.24.2))
+      mongodb: 6.21.0
+    transitivePeerDependencies:
+      - '@aws-sdk/credential-providers'
+      - '@mongodb-js/zstd'
+      - gcp-metadata
+      - kerberos
+      - mongodb-client-encryption
+      - snappy
+      - socks
+
   '@langchain/openai@0.5.5(@langchain/core@0.3.44(openai@4.94.0(ws@8.18.1)(zod@3.24.2)))(ws@8.18.1)':
     dependencies:
       '@langchain/core': 0.3.44(openai@4.94.0(ws@8.18.1)(zod@3.24.2))
@@ -2821,6 +2852,11 @@ snapshots:
       - ws
 
   '@langchain/textsplitters@0.1.0(@langchain/core@0.3.44(openai@4.94.0(ws@8.18.1)(zod@3.24.2)))':
+    dependencies:
+      '@langchain/core': 0.3.44(openai@4.94.0(ws@8.18.1)(zod@3.24.2))
+      js-tiktoken: 1.0.19
+
+  '@langchain/textsplitters@1.0.1(@langchain/core@0.3.44(openai@4.94.0(ws@8.18.1)(zod@3.24.2)))':
     dependencies:
       '@langchain/core': 0.3.44(openai@4.94.0(ws@8.18.1)(zod@3.24.2))
       js-tiktoken: 1.0.19
@@ -3683,7 +3719,7 @@ snapshots:
       '@types/whatwg-url': 11.0.5
       whatwg-url: 14.2.0
 
-  mongodb@6.12.0:
+  mongodb@6.21.0:
     dependencies:
       '@mongodb-js/saslprep': 1.4.5
       bson: 6.10.4
