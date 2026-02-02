@@ -1709,79 +1709,8 @@ Comprar acá: {link}
 
 ---
 
-# 5) DATOS OFICIALES — BANCOS
+# 5) DATOS OFICIALES en cuanto a promos bancarias y precios, utiliza la herramienta precios_y_promociones_vigentes para obtener la información correcta.
 
-## 5.1 Banco Nación — Tienda BNA
-- Exclusivo: clientes Banco Nación
-- Link único: https://www.tiendabna.com.ar/catalog?sh=3401
-
-(BN1) Febrero — Palas Pampa & Hunter
-- Cuotas: 12 sin interés
-- Desde: $25.083 / cuota
-- Mensaje sugerido: “12 cuotas sin interés desde $25.083 en Palas Pampa & Hunter — exclusivo clientes Banco Nación”
-- Comprar: https://www.tiendabna.com.ar/catalog?sh=3401
-
-(BN2) Febrero — Línea Vulcano
-- Cuotas: 12 sin interés
-- Desde: $30.458 / cuota
-- Mensaje sugerido: “12 cuotas sin interés desde $30.458 en Palas Vulcano — exclusivo clientes Banco Nación”
-- Comprar: https://www.tiendabna.com.ar/catalog?sh=3401
-
-(BN3) 9 al 13 de Febrero — Pampa & Hunter
-- Cuotas: 24 sin interés
-- Desde: $15.229 / cuota
-- Mensaje sugerido: “24 cuotas sin interés desde $15.229 en Palas KOMBAT — exclusivo clientes Banco Nación”
-- Comprar: https://www.tiendabna.com.ar/catalog?sh=3401
-
-(BN4) 9 al 13 de Febrero — Línea Vulcano
-- Cuotas: 24 sin interés
-- Desde: $17.917 / cuota
-- Mensaje sugerido: “24 cuotas sin interés desde $17.917 en Palas KOMBAT — exclusivo clientes Banco Nación”
-- Comprar: https://www.tiendabna.com.ar/catalog?sh=3401
-
-(BN5) 25 al 27 de Febrero — Pampa & Hunter
-- Cuotas: 24 sin interés
-- Desde: $15.229 / cuota
-- Mensaje sugerido: “24 cuotas sin interés desde $15.229 en Palas KOMBAT — exclusivo clientes Banco Nación”
-- Comprar: https://www.tiendabna.com.ar/catalog?sh=3401
-
-(BN6) 25 al 27 de Febrero — Línea Vulcano
-- Cuotas: 24 sin interés
-- Desde: $17.917 / cuota
-- Mensaje sugerido: “24 cuotas sin interés desde $17.917 en Palas KOMBAT — exclusivo clientes Banco Nación”
-- Comprar: https://www.tiendabna.com.ar/catalog?sh=3401
-
----
-
-## 5.2 Banco Provincia — Provincia Compras
-- Exclusivo: clientes Banco Provincia
-- Link único: https://www.provinciacompras.com.ar/kombat077?map=seller
-
-(BP1) Febrero — Pampa & Hunter
-- Cuotas: 6 sin interés
-- Desde: $46.583 / cuota
-- Mensaje sugerido: “6 cuotas sin interés desde $46.583 en Palas KOMBAT — exclusivo clientes Banco Provincia”
-- Comprar: https://www.provinciacompras.com.ar/kombat077?map=seller
-
-(BP2) Febrero — Línea Vulcano
-- Cuotas: 6 sin interés
-- Desde: $53.750 / cuota
-- Mensaje sugerido: “6 cuotas sin interés desde $53.750 en Palas KOMBAT — exclusivo clientes Banco Provincia”
-- Comprar: https://www.provinciacompras.com.ar/kombat077?map=seller
-
-(BP3) 10 al 12 de Febrero — Pampa & Hunter
-- Cuotas: 18 sin interés
-- Desde: $20.306 / cuota
-- Mensaje sugerido: “18 cuotas sin interés desde $20.306 en Palas KOMBAT — exclusivo clientes Banco Provincia”
-- Comprar: https://www.provinciacompras.com.ar/kombat077?map=seller
-
-(BP4) 10 al 12 de Febrero — Línea Vulcano
-- Cuotas: 18 sin interés
-- Desde: $23.889 / cuota
-- Mensaje sugerido: “18 cuotas sin interés desde $23.889 en Palas KOMBAT — exclusivo clientes Banco Provincia”
-- Comprar: https://www.provinciacompras.com.ar/kombat077?map=seller
-
----
 
 # 6) DATOS OFICIALES — TIENDA OFICIAL KOMBAT (FEBRERO)
 
@@ -1840,4 +1769,5 @@ Comprar acá: {link}
 - Si el usuario pide cuotas → Bancos + link del banco.
 - Si el usuario pide precio/descuento → Tienda Oficial + precio final.
 - Si pregunta “¿dónde compro?” → 1 link del canal elegido (a menos que pida “ambos”).
+- Estos mensajes de respuesta no deben superar las 35 palabras.
 `;

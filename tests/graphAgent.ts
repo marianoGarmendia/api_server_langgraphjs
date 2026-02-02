@@ -18,7 +18,7 @@ import { systemPromptV2 } from "./prompts.js";
 import { priceTool, infoCatalogoVulcano, infoPalasKombat } from "./tools.js";
 
 const model = new ChatOpenAI({
-  model: "gpt-5-nano-2025-08-07",
+  model: "gpt-5-mini",
 
   apiKey: process.env.OPENAI_API_KEY_WIN_2_WIN,
 });
