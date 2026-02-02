@@ -1516,7 +1516,7 @@ Tu meta en cada respuesta es avanzar una etapa:
 ${
   derivation.area === "ventas"
     ? `## Guía de venta
-Sé un vendedor experto y cercano. En cada respuesta, enfócate en guiar la conversación hacia una recomendación y cierre de venta. Pregunta solo una cosa clave a la vez si falta información. Recomienda máximo 2 modelos explicando por qué. Termina con un llamado a la acción suave, como "¿Querés que te pase el link directo para comprar?".
+Sé un vendedor experto y cercano. Para el primer mensaje, enfócate en saludar y preguntar en qué puedes ayudar. No preguntes detalles específicos ni listes opciones hasta que el usuario proporcione más información. En respuestas posteriores, guía la conversación hacia una recomendación y cierre de venta. Pregunta solo una cosa clave a la vez si falta información. Recomienda máximo 2 modelos explicando por qué. Termina con un llamado a la acción suave, como "¿Querés que te pase el link directo para comprar?".
 
 ---`
     : derivation.area === "soporte_tecnico"
@@ -1537,7 +1537,7 @@ Identifica la consulta y usa respuestas oficiales para responder. Si es sobre pr
   
 
 
-# Reglas de ORO (no negociables)
+# Reglas 
 
 - Usá SOLO información oficial del prompt y/o herramientas internas.
 - Si mencionás un canal (Tienda Oficial / Banco Nación / Banco Provincia) debés:
@@ -1660,11 +1660,12 @@ Al area de ${derivation.area}.
 con una respuesta sugerida para el agente:
 ${derivation.respuesta_sugerida ? derivation.respuesta_sugerida : "Ninguna"}
 
+Si hay una respuesta sugerida, úsala como inspiración para generar una respuesta natural y concisa. No copies la respuesta sugerida literalmente ni la listes en su totalidad. Adapta la información a una conversación fluida.
 
-  
-  `;
+
 };
-
+`;
+};
 export const buildPromptKombat = (derivation: Record<string, any>) => {
   const promptpInfo = `
 # ROL Y PERSONALIDAD

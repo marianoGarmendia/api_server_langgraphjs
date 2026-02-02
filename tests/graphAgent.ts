@@ -15,7 +15,7 @@ import {
 } from "@langchain/langgraph";
 import { buildPromptKombatV2 } from "./prompts.js";
 import { routerSchema } from "./schemas.mjs";
-import { buildPromptKombat } from "./prompts.js";
+// import { buildPromptKombat } from "./prompts.js";
 
 import { priceTool, infoCatalogoVulcano, infoPalasKombat } from "./tools.js";
 
@@ -53,6 +53,15 @@ const buildModel = (config: any) => {
 
 const llmCall = async (state: typeof MessagesState.State) => {
   const { messages, derivation } = state;
+  if (derivation && derivation.mas_info) {
+    console.log("Necesita mas info de un agente especifico");
+    return {
+      messages: [
+        ...messages,
+        new AIMessage(String(derivation.respuesta_sugerida)),
+      ],
+    };
+  }
   const prompt = buildPromptKombatV2(derivation || {});
   const sysMessage = new SystemMessage(prompt);
   const modelWithTools = model.bindTools(tools);
@@ -79,7 +88,9 @@ const router = async (state: typeof MessagesState.State) => {
 
   En el campo 'reason' debes explicar brevemente por qué se eligió esa área, para que el modelo que reciba esta información lo entienda claramente.
 
-  En el campo 'respuesta_sugerida' debes incluir la respuesta sugerida al usuario en base a las políticas oficiales de la empresa.
+  - En el campo 'mas_info' debes indicar si se necesita más información de un agente especifico de ventas o soporte técnico, si es 'true' quiere decir que necesita mas información y si es 'false' quiere decir que no necesita más información y la respuesta sugerida es suficiente.
+
+  En el campo 'respuesta_sugerida' debes incluir la respuesta sugerida al usuario en base a las políticas oficiales de la empresa. Si la consulta es un saludo simple (como 'hola', 'buenos días'), genera una respuesta sugerida breve: solo un saludo de vuelta y pregunta en qué puede ayudar.
 
   ## información para generar una respuesta suguerida:
 Regla de oro (prioridad absoluta)

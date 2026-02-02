@@ -11,6 +11,11 @@ export const routerSchema = z.object({
     .describe(
       "Respuesta sugerida que le pasas al asistente final para que pueda utilizarla en respuesta  al usuario en base a las políticas oficiales de la empresa",
     ),
+  mas_info: z
+    .boolean()
+    .describe(
+      "Indica si se necesita más información de un agente especifico de ventas o soporte técnico, si es 'true' quiere decir que necesita mas información y si es 'false' quiere decir que no necesita más información y la respuesta sugerida es suficiente",
+    ),
   reason: z
     .string()
     .describe(
