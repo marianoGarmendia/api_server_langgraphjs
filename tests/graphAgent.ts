@@ -13,7 +13,7 @@ import {
   END,
   MemorySaver,
 } from "@langchain/langgraph";
-import { systemPromptV2, buildPromptKombatV2 } from "./prompts.js";
+import { buildPromptKombatV2 } from "./prompts.js";
 import { routerSchema } from "./schemas.mjs";
 import { buildPromptKombat } from "./prompts.js";
 
