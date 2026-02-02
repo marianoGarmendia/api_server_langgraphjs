@@ -13,7 +13,7 @@ export const priceTool = tool(
   async ({ query }: { query: string }) => {
     const model = new ChatOpenAI({
       model: "gpt-5-mini",
-      apiKey: process.env.OPENAI_API_KEY_WIN_2_WIN,
+      apiKey: process.env.OPENAI_API_KEY,
     });
 
      const KOMBAT_PRECIOS_PROMOCIONES_FEBRERO = `
