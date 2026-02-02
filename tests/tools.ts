@@ -12,7 +12,7 @@ dotenv.config();
 export const priceTool = tool(
   async ({ query }: { query: string }) => {
     const model = new ChatOpenAI({
-      model: "gpt-5-nano-2025-08-07",
+      model: "gpt-5-mini",
       apiKey: process.env.OPENAI_API_KEY_WIN_2_WIN,
     });
 
@@ -22,10 +22,8 @@ export const priceTool = tool(
       new SystemMessage(sysPrompt),
       new HumanMessage(query),
     ]);
-    fs.writeFileSync(
-      "response_precios_y_promociones_vigentes.json",
-      JSON.stringify(response, null, 2)
-    );
+    
+    console.log("response", response);
     return response;
   },
   {
@@ -370,7 +368,9 @@ export const infoPalasKombat = tool(
         metadata: doc.metadata,
       }));
 
-      fs.writeFileSync("results_v1_.json", JSON.stringify(results, null, 2));
+     
+
+      console.log("payload", payload);
 
       return payload
         .map((p) => {
