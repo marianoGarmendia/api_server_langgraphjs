@@ -62,7 +62,7 @@ export const priceTool = tool(
       apiKey: process.env.OPENAI_API_KEY,
     });
 
-     const KOMBAT_PRECIOS_PROMOCIONES_FEBRERO = `
+    const KOMBAT_PRECIOS_PROMOCIONES_FEBRERO = `
     # DATOS OFICIALES KOMBAT — FEBRERO 2025
     
     ## TIENDA OFICIAL KOMBAT
@@ -70,64 +70,172 @@ export const priceTool = tool(
     - Pago: SOLO CONTADO (transferencia / débito / crédito 1 cuota / efectivo)
     - Cuotas sin interés: NO DISPONIBLE
     
-    ### Productos y precios
-    
-    | Producto | Lista | Descuento | Precio Final | Nota |
-    |----------|-------|-----------|--------------|------|
-    | Palas Pampa & Hunter | $430.000 | 50% | $215.000 | - |
-    | Palas Línea Vulcano | $430.000 | 35% | $279.500 | - |
-    | Pack Hunter + Bolso Vulcano | $630.000 | 55% | $283.500 | - |
-    | Pack Hunter + Mochila Vesubio | $560.000 | 55% | $252.000 | Sujeto a stock |
-    | Pack Pala Vulcano + Mochila Vulcano | $560.000 | 40% | $336.000 | - |
-    | Pack KOMBATIENTE PREMIUM | $729.000 | 40% | $437.400 | Incluye: Pala Vulcano (Etna/Vesubio/Osorno/Krakatoa) + Bolso Vulcano + Remera + Short |
-    
-    ---
-    
-    ## BANCO NACIÓN
-    - Link de compra: https://www.tiendabna.com.ar/catalog?sh=3401
-    - Exclusivo clientes Banco Nación
-    
-    ### Ofertas todo febrero
-    | Línea | Cuotas | Valor cuota desde |
-    |-------|--------|-------------------|
-    | Pampa & Hunter | 12 sin interés | $25.083 |
-    | Vulcano | 12 sin interés | $30.458 |
-    
-    ### Ofertas 9 al 13 de febrero
-    | Línea | Cuotas | Valor cuota desde |
-    |-------|--------|-------------------|
-    | Pampa & Hunter | 24 sin interés | $15.229 |
-    | Vulcano | 24 sin interés | $17.917 |
-    
-    ### Ofertas 25 al 27 de febrero
-    | Línea | Cuotas | Valor cuota desde |
-    |-------|--------|-------------------|
-    | Pampa & Hunter | 24 sin interés | $15.229 |
-    | Vulcano | 24 sin interés | $17.917 |
-    
-    ---
-    
-    ## BANCO PROVINCIA
-    - Link de compra: https://www.provinciacompras.com.ar/kombat077?map=seller
-    - Exclusivo clientes Banco Provincia
-    
-    ### Ofertas todo febrero
-    | Línea | Cuotas | Valor cuota desde |
-    |-------|--------|-------------------|
-    | Pampa & Hunter | 6 sin interés | $46.583 |
-    | Vulcano | 6 sin interés | $53.750 |
-    
-    ### Ofertas 10 al 12 de febrero
-    | Línea | Cuotas | Valor cuota desde |
-    |-------|--------|-------------------|
-    | Pampa & Hunter | 18 sin interés | $20.306 |
-    | Vulcano | 18 sin interés | $23.889 |
-    
+    {
+  "meta": {
+    "moneda": "ARS",
+    "mes": "febrero",
+    "anio_asumido": 2026,
+    "notas": [
+      "Montos en enteros (ej: 430000).",
+      "Pampa y Hunter se separan como líneas individuales aunque compartan valores.",
+      "Rangos de fecha dentro de febrero del anio_asumido."
+    ]
+  },
+  "productos": [
+    {
+      "id": "palas_pampa",
+      "tipo": "producto",
+      "nombre": "Palas Pampa",
+      "linea": "Pampa",
+      "precio_lista": 430000,
+      "descuento_porcentaje": 50,
+      "precio_final": 215000,
+      "nota": null
+    },
+    {
+      "id": "palas_hunter",
+      "tipo": "producto",
+      "nombre": "Palas Hunter",
+      "linea": "Hunter",
+      "precio_lista": 430000,
+      "descuento_porcentaje": 50,
+      "precio_final": 215000,
+      "nota": null
+    },
+    {
+      "id": "palas_vulcano",
+      "tipo": "producto",
+      "nombre": "Palas Línea Vulcano",
+      "linea": "Vulcano",
+      "precio_lista": 430000,
+      "descuento_porcentaje": 35,
+      "precio_final": 279500,
+      "nota": null
+    },
+    {
+      "id": "pack_hunter_bolso_vulcano",
+      "tipo": "pack",
+      "nombre": "Pack Hunter + Bolso Vulcano",
+      "incluye": ["Pala Hunter", "Bolso Vulcano"],
+      "precio_lista": 630000,
+      "descuento_porcentaje": 55,
+      "precio_final": 283500,
+      "nota": null
+    },
+    {
+      "id": "pack_hunter_mochila_vesubio",
+      "tipo": "pack",
+      "nombre": "Pack Hunter + Mochila Vesubio",
+      "incluye": ["Pala Hunter", "Mochila Vesubio"],
+      "precio_lista": 560000,
+      "descuento_porcentaje": 55,
+      "precio_final": 252000,
+      "nota": "Sujeto a stock"
+    },
+    {
+      "id": "pack_vulcano_mochila_vulcano",
+      "tipo": "pack",
+      "nombre": "Pack Pala Vulcano + Mochila Vulcano",
+      "incluye": ["Pala Vulcano", "Mochila Vulcano"],
+      "precio_lista": 560000,
+      "descuento_porcentaje": 40,
+      "precio_final": 336000,
+      "nota": null
+    },
+    {
+      "id": "pack_kombatiente_premium",
+      "tipo": "pack",
+      "nombre": "Pack KOMBATIENTE PREMIUM",
+      "incluye": [
+        "Pala Vulcano (Etna/Vesubio/Osorno/Krakatoa)",
+        "Bolso Vulcano",
+        "Remera",
+        "Short"
+      ],
+      "precio_lista": 729000,
+      "descuento_porcentaje": 40,
+      "precio_final": 437400,
+      "nota": "Incluye: Pala Vulcano (Etna/Vesubio/Osorno/Krakatoa) + Bolso Vulcano + Remera + Short"
+    }
+  ],
+  "bancos": [
+    {
+      "nombre_banco": "BANCO NACIÓN",
+      "link_de_compra": "https://www.tiendabna.com.ar/catalog?sh=3401",
+      "exclusividad": "Exclusivo clientes Banco Nación",
+      "ofertas": [
+        {
+          "etiqueta": "todo_febrero",
+          "rango_fechas": { "inicio": "2026-02-01", "fin": "2026-02-29" },
+          "cuotas": { "cantidad": 12, "condicion": "sin_interes" },
+          "lineas": [
+            { "linea": "Pampa", "valor_cuota_desde": 25083 },
+            { "linea": "Hunter", "valor_cuota_desde": 25083 },
+            { "linea": "Vulcano", "valor_cuota_desde": 30458 }
+          ]
+        },
+        {
+          "etiqueta": "del_9_al_13_febrero",
+          "rango_fechas": { "inicio": "2026-02-09", "fin": "2026-02-13" },
+          "cuotas": { "cantidad": 24, "condicion": "sin_interes" },
+          "lineas": [
+            { "linea": "Pampa", "valor_cuota_desde": 15229 },
+            { "linea": "Hunter", "valor_cuota_desde": 15229 },
+            { "linea": "Vulcano", "valor_cuota_desde": 17917 }
+          ]
+        },
+        {
+          "etiqueta": "del_25_al_27_febrero",
+          "rango_fechas": { "inicio": "2026-02-25", "fin": "2026-02-27" },
+          "cuotas": { "cantidad": 24, "condicion": "sin_interes" },
+          "lineas": [
+            { "linea": "Pampa", "valor_cuota_desde": 15229 },
+            { "linea": "Hunter", "valor_cuota_desde": 15229 },
+            { "linea": "Vulcano", "valor_cuota_desde": 17917 }
+          ]
+        }
+      ]
+    },
+    {
+      "nombre_banco": "BANCO PROVINCIA",
+      "link_de_compra": "https://www.provinciacompras.com.ar/kombat077?map=seller",
+      "exclusividad": "Exclusivo clientes Banco Provincia",
+      "ofertas": [
+        {
+          "etiqueta": "todo_febrero",
+          "rango_fechas": { "inicio": "2026-02-01", "fin": "2026-02-29" },
+          "cuotas": { "cantidad": 6, "condicion": "sin_interes" },
+          "lineas": [
+            { "linea": "Pampa", "valor_cuota_desde": 46583 },
+            { "linea": "Hunter", "valor_cuota_desde": 46583 },
+            { "linea": "Vulcano", "valor_cuota_desde": 53750 }
+          ]
+        },
+        {
+          "etiqueta": "del_10_al_12_febrero",
+          "rango_fechas": { "inicio": "2026-02-10", "fin": "2026-02-12" },
+          "cuotas": { "cantidad": 18, "condicion": "sin_interes" },
+          "lineas": [
+            { "linea": "Pampa", "valor_cuota_desde": 20306 },
+            { "linea": "Hunter", "valor_cuota_desde": 20306 },
+            { "linea": "Vulcano", "valor_cuota_desde": 23889 }
+          ]
+        }
+      ]
+    }
+  ]
+}
+
     ---
     
     ## RESUMEN RÁPIDO POR LÍNEA
     
-    ### Pampa & Hunter (línea económica/intermedia)
+    ### Pampa  (línea económica/intermedia)
+    - Tienda Oficial: $215.000 (50% OFF) — contado
+    - Banco Nación Feb: 12 cuotas de $25.083 | 24 cuotas de $15.229 (fechas especiales)
+    - Banco Provincia Feb: 6 cuotas de $46.583 | 18 cuotas de $20.306 (fechas especiales)
+
+    ### Hunter  (línea económica/intermedia)
     - Tienda Oficial: $215.000 (50% OFF) — contado
     - Banco Nación Feb: 12 cuotas de $25.083 | 24 cuotas de $15.229 (fechas especiales)
     - Banco Provincia Feb: 6 cuotas de $46.583 | 18 cuotas de $20.306 (fechas especiales)
@@ -143,7 +251,8 @@ export const priceTool = tool(
     
     | Producto | Contado (Tienda) | 12 cuotas BNA | 24 cuotas BNA | 6 cuotas BAPRO | 18 cuotas BAPRO |
     |----------|------------------|---------------|---------------|----------------|-----------------|
-    | Pampa/Hunter | $215.000 | $301.000 | $365.500 | $279.500 | $365.500 |
+    | Pampa | $215.000 | $301.000 | $365.500 | $279.500 | $365.500 |
+    | Hunter | $215.000 | $301.000 | $365.500 | $279.500 | $365.500 |
     | Vulcano | $279.500 | $365.500 | $430.000 | $322.500 | $430.000 |
     
     Nota: El mejor precio siempre es contado en Tienda Oficial. Los bancos ofrecen financiación sin interés pero sobre precio de lista.
@@ -204,7 +313,7 @@ Respuesta: "El Pack KOMBATIENTE PREMIUM incluye: 1 Pala Vulcano (elegís entre E
       new SystemMessage(PRICE_TOOL_SYSTEM_PROMPT),
       new HumanMessage(query),
     ]);
-    
+
     console.log("response", response);
     return response;
   },
@@ -216,10 +325,10 @@ Respuesta: "El Pack KOMBATIENTE PREMIUM incluye: 1 Pala Vulcano (elegís entre E
       query: z
         .string()
         .describe(
-          "La consulta del cliente relacionada sobre precios, cuotas, promociones vigentes, lo mas detallada y estructurada posible para que el modelo pueda responder de la mejor manera posible, debe ser como un mensaje del usuario"
+          "La consulta del cliente relacionada sobre precios, cuotas, promociones vigentes, lo mas detallada y estructurada posible para que el modelo pueda responder de la mejor manera posible, debe ser como un mensaje del usuario",
         ),
     }),
-  }
+  },
 );
 
 export const infoCatalogoVulcano = tool(
@@ -394,26 +503,26 @@ export const infoCatalogoVulcano = tool(
       q.includes("potencia") && q.includes("alto")
         ? "Alto"
         : q.includes("potencia") && q.includes("medio")
-        ? "Medio"
-        : q.includes("potencia") && q.includes("bajo")
-        ? "Bajo"
-        : q.includes("potencia")
-        ? "Alto"
-        : undefined;
+          ? "Medio"
+          : q.includes("potencia") && q.includes("bajo")
+            ? "Bajo"
+            : q.includes("potencia")
+              ? "Alto"
+              : undefined;
 
     const control =
       q.includes("control") && q.includes("alto")
         ? "Alto"
         : q.includes("control") && q.includes("medio")
-        ? "Medio"
-        : q.includes("control") && q.includes("bajo")
-        ? "Bajo"
-        : q.includes("control")
-        ? "Alto"
-        : undefined;
+          ? "Medio"
+          : q.includes("control") && q.includes("bajo")
+            ? "Bajo"
+            : q.includes("control")
+              ? "Alto"
+              : undefined;
 
     const allPalas = CATALOGO_VULCANO.lineas.flatMap((l) =>
-      l.palas.map((p) => ({ ...p, linea: l.nombre_linea }))
+      l.palas.map((p) => ({ ...p, linea: l.nombre_linea })),
     );
 
     const exactName = allPalas.find((p) => includes(p.tipo_de_pala));
@@ -443,7 +552,7 @@ export const infoCatalogoVulcano = tool(
             p.nucleo,
             p.material,
             p.linea,
-          ].join(" ")
+          ].join(" "),
         );
         const score = q
           .split(" ")
@@ -458,7 +567,7 @@ export const infoCatalogoVulcano = tool(
     const body = ranked
       .map(
         (p) =>
-          `- ${p.tipo_de_pala} (${p.linea}) | forma: ${p.forma}, dureza: ${p.dureza}, balance: ${p.balance}, potencia: ${p.potencia}, control: ${p.control}, nucleo: ${p.nucleo}, material: ${p.material}, peso: ${p.peso}`
+          `- ${p.tipo_de_pala} (${p.linea}) | forma: ${p.forma}, dureza: ${p.dureza}, balance: ${p.balance}, potencia: ${p.potencia}, control: ${p.control}, nucleo: ${p.nucleo}, material: ${p.material}, peso: ${p.peso}`,
       )
       .join("\n");
 
@@ -476,10 +585,10 @@ export const infoCatalogoVulcano = tool(
       query: z
         .string()
         .describe(
-          "La consulta del cliente relacionada sobre el catálogo de palas Vulcano, o tambien una query para buscar en el catálogo sin que el usuario haya preguntado específicamente sobre el catálogo, trata de ser lo más específico posible"
+          "La consulta del cliente relacionada sobre el catálogo de palas Vulcano, o tambien una query para buscar en el catálogo sin que el usuario haya preguntado específicamente sobre el catálogo, trata de ser lo más específico posible",
         ),
     }),
-  }
+  },
 );
 
 // Tool: búsqueda vectorial con preFilter
@@ -521,7 +630,7 @@ export const infoPalasKombat = tool(
       const results = await vectorStore.similaritySearchWithScore(
         input.query,
         input.k,
-        { preFilter: { $and: and } }
+        { preFilter: { $and: and } },
       );
 
       // Para excluir ids de una busqueda
@@ -550,8 +659,6 @@ export const infoPalasKombat = tool(
         metadata: doc.metadata,
       }));
 
-     
-
       console.log("payload", payload);
 
       return payload
@@ -570,7 +677,7 @@ export const infoPalasKombat = tool(
     description:
       "Busca contexto relevante para responder preguntas sobre como elegir palas kombat.",
     schema: SearchInput,
-  }
+  },
 );
 
 // Probamos crear un retriever manual
