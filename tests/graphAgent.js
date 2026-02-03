@@ -1,89 +1,60 @@
 import { ToolNode } from "@langchain/langgraph/prebuilt";
 import { ChatOpenAI } from "@langchain/openai";
-import {
-  
-  AIMessage,
-  SystemMessage,
-} from "@langchain/core/messages";
-import {
-  StateGraph,
-  MessagesAnnotation,
-  Annotation,
-  START,
-  END,
-  MemorySaver,
-} from "@langchain/langgraph";
+import { AIMessage, SystemMessage, } from "@langchain/core/messages";
+import { StateGraph, MessagesAnnotation, Annotation, START, END, MemorySaver, } from "@langchain/langgraph";
 import { buildAgentPrompt, FAQ_SYSTEM_PROMPT } from "./promptV2.js";
-import { FaqOutput, faqSchema, RouterOutputSimple, routerSchemaSimple } from "./schemas.mjs";
+import { faqSchema, routerSchemaSimple } from "./schemas.mjs";
 // import { buildPromptKombat } from "./prompts.js";
-
-import { priceTool, infoCatalogoVulcano, infoPalasKombat, tiendaKombatTool,linkProductoTool } from "./tools.js";
-
+import { priceTool, infoCatalogoVulcano, infoPalasKombat, tiendaKombatTool, linkProductoTool } from "./tools.js";
 const model = new ChatOpenAI({
-  model: "gpt-5-mini",
-
-  apiKey: process.env.OPENAI_API_KEY,
+    model: "gpt-5-mini",
+    apiKey: process.env.OPENAI_API_KEY,
 });
-
 const tools = [infoPalasKombat, priceTool, infoCatalogoVulcano, tiendaKombatTool, linkProductoTool];
-
-
 // const modelWithTools = model.bindTools(tools);
-
 const MessagesState = Annotation.Root({
-  ...MessagesAnnotation.spec,
-  faqResult: Annotation<FaqOutput | null>({
-    reducer: (_, next) => next,
-    default: () => null,
-  }),
-  derivation: Annotation<RouterOutputSimple | null>({
-    reducer: (_, next) => next,
-    default: () => null,
-  }),
+    ...MessagesAnnotation.spec,
+    faqResult: Annotation({
+        reducer: (_, next) => next,
+        default: () => null,
+    }),
+    derivation: Annotation({
+        reducer: (_, next) => next,
+        default: () => null,
+    }),
 });
-
-
-
 // Función condicional después del FAQ
-const afterFaq = (state: typeof MessagesState.State) => {
-  const faqResult = state.faqResult;
-  
-  // Si es FAQ con respuesta completa, terminamos
-  if (faqResult?.isFaq && faqResult.answer && !faqResult.requiere_tool) {
-    return "faqResponseNode";
-  }
-  
-  // Si no es FAQ o necesita herramientas, pasamos al router
-  return "router";
-}
-
+const afterFaq = (state) => {
+    const faqResult = state.faqResult;
+    // Si es FAQ con respuesta completa, terminamos
+    if (faqResult?.isFaq && faqResult.answer && !faqResult.requiere_tool) {
+        return "faqResponseNode";
+    }
+    // Si no es FAQ o necesita herramientas, pasamos al router
+    return "router";
+};
 // Nodo que genera la respuesta FAQ final
-const faqResponseNode = async (state: typeof MessagesState.State) => {
-  const answer = state.faqResult?.answer || "No tengo esa información.";
-  
-  return {
-    messages: [new AIMessage({ content: answer })],
-  };
+const faqResponseNode = async (state) => {
+    const answer = state.faqResult?.answer || "No tengo esa información.";
+    return {
+        messages: [new AIMessage({ content: answer })],
+    };
 };
-
-
-const llmCall = async (state: typeof MessagesState.State) => {
-  const { messages, derivation } = state;
-  // Construir prompt dinámico según la derivación
-  const systemPrompt = buildAgentPrompt(derivation);
-  const modelWithTools = model.bindTools(tools);
-  const response = await modelWithTools.invoke([
-    new SystemMessage(systemPrompt),
-    ...messages,
-  ]);
-  return { messages: [response] };
+const llmCall = async (state) => {
+    const { messages, derivation } = state;
+    // Construir prompt dinámico según la derivación
+    const systemPrompt = buildAgentPrompt(derivation);
+    const modelWithTools = model.bindTools(tools);
+    const response = await modelWithTools.invoke([
+        new SystemMessage(systemPrompt),
+        ...messages,
+    ]);
+    return { messages: [response] };
 };
-
 const toolNode = new ToolNode(tools);
-
-const router = async (state: typeof MessagesState.State) => {
-  const messages = state.messages;
-  const ROUTER_SYSTEM_PROMPT = `
+const router = async (state) => {
+    const messages = state.messages;
+    const ROUTER_SYSTEM_PROMPT = `
 # ROL
 
 Sos el enrutador de consultas de KOMBAT Padel. Tu única función es clasificar el mensaje del cliente y determinar a qué área debe dirigirse para ser atendido correctamente.
@@ -346,71 +317,58 @@ Respondé ÚNICAMENTE con un JSON válido COMO EL SCHEMA PROVISTO:
 - Un mensaje agresivo o con insultos siempre es RECLAMO
 - El agente decidirá si usa herramientas secundarias como link_producto_kombat
 `;
-
-  const modelRouter = new ChatOpenAI({
-    model: "gpt-4o-mini",
-    apiKey: process.env.OPENAI_API_KEY,
-  }).withStructuredOutput(routerSchemaSimple, { strict: true });
-
-  const response = await modelRouter.invoke([
-    new SystemMessage(ROUTER_SYSTEM_PROMPT),
-    ...messages,
-  ]);
-
-  return { derivation: response };
+    const modelRouter = new ChatOpenAI({
+        model: "gpt-4o-mini",
+        apiKey: process.env.OPENAI_API_KEY,
+    }).withStructuredOutput(routerSchemaSimple, { strict: true });
+    const response = await modelRouter.invoke([
+        new SystemMessage(ROUTER_SYSTEM_PROMPT),
+        ...messages,
+    ]);
+    return { derivation: response };
 };
-
-const faqNode = async (state: typeof MessagesState.State) => {
-  const messages = state.messages;
-
-  const model = new ChatOpenAI({
-    model: "gpt-4o-mini", // Modelo económico para clasificación
-    temperature: 0,
-    apiKey: process.env.OPENAI_API_KEY,
-  }).withStructuredOutput(faqSchema, { strict: true });
-
-  const response = await model.invoke([
-    new SystemMessage(FAQ_SYSTEM_PROMPT),
-    ...messages,
-  ]);
-
-  return { 
-    messages: messages, 
-    faqResult: response 
-  };
+const faqNode = async (state) => {
+    const messages = state.messages;
+    const model = new ChatOpenAI({
+        model: "gpt-4o-mini", // Modelo económico para clasificación
+        temperature: 0,
+        apiKey: process.env.OPENAI_API_KEY,
+    }).withStructuredOutput(faqSchema, { strict: true });
+    const response = await model.invoke([
+        new SystemMessage(FAQ_SYSTEM_PROMPT),
+        ...messages,
+    ]);
+    return {
+        messages: messages,
+        faqResult: response
+    };
 };
-
-const shouldContinue = (state: typeof MessagesState.State) => {
-  const last = state.messages.at(-1) as AIMessage;
-  // if (!last || !(last instanceof AIMessage)) return END;
-  console.log("last", last);
-  return last?.tool_calls?.length ? "toolNode" : END;
+const shouldContinue = (state) => {
+    const last = state.messages.at(-1);
+    // if (!last || !(last instanceof AIMessage)) return END;
+    console.log("last", last);
+    return last?.tool_calls?.length ? "toolNode" : END;
 };
-
 const graphKombat = new StateGraph(MessagesState)
-  .addNode("llmCall", llmCall)
-  .addNode("faqNode", faqNode)
-  .addNode("faqResponseNode", faqResponseNode)
-  .addNode("router", router)
-  .addNode("toolNode", toolNode)
-  .addEdge(START, "faqNode")
-  .addConditionalEdges("faqNode", afterFaq, ["faqResponseNode", "router"])
-  .addEdge("router", "llmCall")
-  .addEdge("faqResponseNode", END)
-  .addConditionalEdges("llmCall", shouldContinue, ["toolNode", END])
-  .addEdge("toolNode", "llmCall");
-
+    .addNode("llmCall", llmCall)
+    .addNode("faqNode", faqNode)
+    .addNode("faqResponseNode", faqResponseNode)
+    .addNode("router", router)
+    .addNode("toolNode", toolNode)
+    .addEdge(START, "faqNode")
+    .addConditionalEdges("faqNode", afterFaq, ["faqResponseNode", "router"])
+    .addEdge("router", "llmCall")
+    .addEdge("faqResponseNode", END)
+    .addConditionalEdges("llmCall", shouldContinue, ["toolNode", END])
+    .addEdge("toolNode", "llmCall");
 const checkpointer = new MemorySaver();
 export const workflow = graphKombat.compile({ checkpointer });
-
 // Ejemplo de uso:
 // async function demo() {
 //   const orgId = "kombatpadel";
 //   const agentId = "agent_wsp";
 //   const title = "como_elegir_palas_kombat";
-
 //   const question = `Soy principiante en el padel y quiero elegir una pala. Me gustaria que me recomiendes una pala.`;
-
 //   const result = await workflow.invoke(
 //     {
 //       messages: [new HumanMessage(question)],
@@ -424,10 +382,7 @@ export const workflow = graphKombat.compile({ checkpointer });
 //       },
 //     },
 //   );
-
 //   console.log("finished!");
-
 //   console.log(result);
 // }
-
 // demo().catch(console.error);

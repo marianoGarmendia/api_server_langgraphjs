@@ -45,6 +45,11 @@ await copyFile(
 );
 await rimraf("dist/src/graph/parser/schema/types.template.mjs");
 
+// If tsc emits under dist/src/src (default rootDir inference), flatten it.
+await moveChildren("dist/src/src", "dist");
+// Preserve compiled tests when they are part of the runtime graph.
+await mkdir("dist/tests", { recursive: true });
+await moveChildren("dist/src/tests", "dist/tests");
+// Move any remaining top-level outputs.
 await moveChildren("dist/src", "dist");
 await rimraf("dist/src");
-await rimraf("dist/tests");

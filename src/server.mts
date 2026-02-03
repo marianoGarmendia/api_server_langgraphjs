@@ -18,6 +18,7 @@ import { checkpointer } from "./storage/checkpoint.mjs";
 import { store as graphStore } from "./storage/store.mjs";
 import { auth } from "./auth/custom.mjs";
 import { registerAuth } from "./auth/index.mjs";
+import { workflow } from "../tests/graphAgent.js";
 
 const app = new Hono();
 
@@ -73,6 +74,45 @@ app.post(
 );
 
 app.use(auth());
+app.post(
+  "/agent",
+  zValidator(
+    "json",
+    z.object({
+      query: z.string(),
+      from: z.string(),
+      source: z.string(),
+    })
+  ),
+  async (c) => {
+    const { query, from, source } = c.req.valid("json");
+
+    // IMPORTANTE: await
+    const state = await workflow.invoke(
+      {
+        // IMPORTANTE: si usás MessagesAnnotation, pasá lista de mensajes
+        messages:query,
+      },
+      {
+        configurable: {
+          thread_id: `${source}:${from}`, // buena práctica: evita colisiones entre canales
+          from,
+          source,
+        },
+      }
+    );
+
+    // Normalmente querés responder con el último mensaje del assistant
+    const last = state?.messages?.at?.(-1);
+
+    return c.json({
+      content: last?.content ?? "",
+      // opcional: si querés debug
+      // messages: state.messages?.map(m => ({ type: m.getType?.(), content: m.content })),
+    });
+  }
+);
+
 app.post(
   "/custom/echo",
   zValidator(
