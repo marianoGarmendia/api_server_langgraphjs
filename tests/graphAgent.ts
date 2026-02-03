@@ -350,7 +350,7 @@ Respondé ÚNICAMENTE con un JSON válido COMO EL SCHEMA PROVISTO:
   const modelRouter = new ChatOpenAI({
     model: "gpt-4o-mini",
     apiKey: process.env.OPENAI_API_KEY,
-  }).withStructuredOutput(routerSchemaSimple, { strict: true });
+  }).withStructuredOutput(routerSchemaSimple, { strict: true }).withConfig({tags:['nostream']});
 
   const response = await modelRouter.invoke([
     new SystemMessage(ROUTER_SYSTEM_PROMPT),
@@ -367,7 +367,7 @@ const faqNode = async (state: typeof MessagesState.State) => {
     model: "gpt-4o-mini", // Modelo económico para clasificación
     temperature: 0,
     apiKey: process.env.OPENAI_API_KEY,
-  }).withStructuredOutput(faqSchema, { strict: true });
+  }).withStructuredOutput(faqSchema, { strict: true }).withConfig({tags:['nostream']});
 
   const response = await model.invoke([
     new SystemMessage(FAQ_SYSTEM_PROMPT),
