@@ -9,6 +9,52 @@ import fs from "fs";
 import dotenv from "dotenv";
 dotenv.config();
 
+const tiendaKombat = tool(
+  async ({ query }: { query: string }) => {
+
+
+    const info_tienda_kombat = `
+
+    
+    
+    
+- Oferta válida: FEBRERO
+- Disponible solo en la web: https://www.kombatpadel.com.ar
+- Pago contado (medios): transferencia, débito, crédito en 1 cuota, efectivo
+- No hay cuotas sin interés
+
+PRECIOS (ya incluyen descuento):
+- Palas línea Vulcano: $279.500 (lista $430.000, -35%)
+- Palas Pampa y Hunter: $215.000 (lista $430.000, -50%)
+- Pack Hunter + Bolso Vulcano: $283.500 (lista $630.000, -55%)
+- Pack Hunter + Mochila Vesubio: $252.000 (lista $560.000, -55%) [sujeto a stock]
+- Pack Pala Vulcano + Mochila Vulcano: $336.000 (lista $560.000, -40%)
+- Pack KOMBATIENTE PREMIUM: $437.400 (lista $729.000, -40%)
+  Incluye: 1 Pala Vulcano (Etna, Vesubio, Osorno o Krakatoa) + 1 Bolso Vulcano + 1 Remera + 1 Short
+
+Tu objetivo: responder rápido, claro y con actitud de venta.
+Reglas:
+1) Si preguntan “¿dónde compro?” => responder con el link a la web.
+2) Si preguntan “¿cuotas?” => aclarar que es contado (transferencia/débito/crédito 1 cuota/efectivo) y que no hay cuotas sin interés.
+3) Si preguntan “¿incluye descuento?” => confirmar que el precio ya es final.
+4) Siempre cerrá con una pregunta para avanzar (ej: “¿Qué pala o pack te interesa y para qué nivel jugás?”).
+
+    `
+    return `
+    - Web: www.kombatpadel.com.ar
+    - Pago: SOLO CONTADO (transferencia / débito / crédito 1 cuota / efectivo)
+    - Cuotas sin interés: NO DISPONIBLE
+    `;
+  },
+  {
+    name: "tienda_kombat",
+    description: "Obtiene la información relacionada con la oferta comercial de la tienda Kombat, sin cuotas, solo pago contado, transferencias, débito, crédito en 1 cuota, efectivo",
+    schema: z.object({
+      query: z.string().describe("La consulta del cliente relacionada sobre precios "),
+    }),
+  }
+)
+
 export const priceTool = tool(
   async ({ query }: { query: string }) => {
     const model = new ChatOpenAI({
