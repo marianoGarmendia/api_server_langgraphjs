@@ -1,23 +1,201 @@
 import { tool } from "@langchain/core/tools";
 import { z } from "zod";
 import { ChatOpenAI } from "@langchain/openai";
+import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { SystemMessage, HumanMessage } from "@langchain/core/messages";
-import { PROMOS_KOMBAT_FEBRERO_BLOCK } from "./prompts.ts";
+import { ProductoKombat , linkProductoSchema} from "./schemas.mjs";
 import { getMongo, getVectorStore } from "./kb/mongoVector.ts";
 import { LangGraphRunnableConfig } from "@langchain/langgraph";
-import fs from "fs";
 import dotenv from "dotenv";
 dotenv.config();
 
-const tiendaKombat = tool(
-  async ({ query }: { query: string }) => {
 
 
-    const info_tienda_kombat = `
+export const KATALOGO_PRODUCTOS_KOMBAT = {
+  palas: [
+    { nombre: "Todas las palas", keywords: ["palas", "todas", "catalogo", "ver palas"], url: "https://kombatpadel.com.ar/es/palas-padel" },
+    { nombre: "Krakatoa", keywords: ["krakatoa", "redonda", "control"], url: "https://kombatpadel.com.ar/es/palas-padel/kombat-krakatoa" },
+    { nombre: "Osorno", keywords: ["osorno", "lagrima", "blanda"], url: "https://kombatpadel.com.ar/es/palas-padel/kombat-osorno" },
+    { nombre: "Fuji", keywords: ["fuji", "lagrima", "media"], url: "https://kombatpadel.com.ar/es/palas-padel/kombat-fuji" },
+    { nombre: "Galeras", keywords: ["galeras", "lagrima", "blanda", "control"], url: "https://kombatpadel.com.ar/es/palas-padel/kombat-galeras" },
+    { nombre: "Teide", keywords: ["teide", "diamante", "media", "potencia"], url: "https://kombatpadel.com.ar/es/palas-padel/kombat-teide" },
+    { nombre: "Vesubio", keywords: ["vesubio", "diamante", "blanda", "potencia"], url: "https://kombatpadel.com.ar/es/palas-padel/kombat-vesubio" },
+    { nombre: "Etna", keywords: ["etna", "diamante", "dura", "potencia"], url: "https://kombatpadel.com.ar/es/palas-padel/kombat-etna" },
+    { nombre: "Pampa", keywords: ["pampa", "economica", "principiante"], url: "https://kombatpadel.com.ar/es/palas-padel/kombat-ia-63-pampa" },
+    { nombre: "Hunter", keywords: ["hunter", "lagrima", "dura", "3k"], url: "https://kombatpadel.com.ar/es/palas-padel/kombat-hunter-3k" },
+  ],
+  accesorios: [
+    { nombre: "Todos los accesorios", keywords: ["accesorios", "todos", "catalogo"], url: "https://kombatpadel.com.ar/es/accesorios-padel" },
+    { nombre: "Bolso paletero Aqua", keywords: ["bolso", "paletero", "aqua", "manu martin"], url: "https://kombatpadel.com.ar/es/inicio/bolso-paletero-aqua-x-manu-martin" },
+    { nombre: "Bolso paletero Vulcano", keywords: ["bolso", "paletero", "vulcano"], url: "https://kombatpadel.com.ar/es/inicio/bolso-paletero-vulcano" },
+    { nombre: "Mochila Krakatoa", keywords: ["mochila", "krakatoa"], url: "https://kombatpadel.com.ar/es/ropa-y-accesorios/mochila-krakatoa" },
+    { nombre: "Mochila Osorno", keywords: ["mochila", "osorno"], url: "https://kombatpadel.com.ar/es/ropa-y-accesorios/mochila-osorno" },
+    { nombre: "Mochila Fuji", keywords: ["mochila", "fuji"], url: "https://kombatpadel.com.ar/es/ropa-y-accesorios/mochila-fuji" },
+    { nombre: "Mochila Teide", keywords: ["mochila", "teide"], url: "https://kombatpadel.com.ar/es/ropa-y-accesorios/mochila-teide" },
+    { nombre: "Mochila Vesubio", keywords: ["mochila", "vesubio"], url: "https://kombatpadel.com.ar/es/ropa-y-accesorios/mochila-vesubio" },
+    { nombre: "Mochila Etna", keywords: ["mochila", "etna"], url: "https://kombatpadel.com.ar/es/accesorios-padel/mochila-etna" },
+    { nombre: "Tubo de bolas", keywords: ["tubo", "bolas", "pelotas"], url: "https://kombatpadel.com.ar/es/accesorios-padel/bote-de-bolas-kombat-padel" },
+    { nombre: "Overgrip", keywords: ["overgrip", "grip", "cinta"], url: "https://kombatpadel.com.ar/es/accesorios-padel/overgrip-individual-blanco-kombat" },
+    { nombre: "Protector transparente", keywords: ["protector", "transparente", "marco"], url: "https://kombatpadel.com.ar/es/accesorios-padel/protector-kombat" },
+  ],
+  indumentaria: [
+    { nombre: "Equipo deportivo negro y verde", keywords: ["equipo", "conjunto", "negro", "verde"], url: "https://kombatpadel.com.ar/es/indumentaria/equipo-deportivo-kombat#/18-talla-xs" },
+    { nombre: "Equipo deportivo Belluati", keywords: ["equipo", "conjunto", "belluati", "celeste"], url: "https://kombatpadel.com.ar/es/indumentaria/equipo-deportivo-kombat-belluati#/10-talla-s" },
+    { nombre: "Campera Direct (mujer)", keywords: ["campera", "direct", "mujer"], url: "https://kombatpadel.com.ar/es/indumentaria/campera-direct#/2-talla-l" },
+    { nombre: "Buzo Camp negro", keywords: ["buzo", "camp", "negro", "unisex"], url: "https://kombatpadel.com.ar/es/indumentaria/buzo-camp-negro#/2-talla-l" },
+    { nombre: "Buzo gris Belluati", keywords: ["buzo", "gris", "belluati", "capucha"], url: "https://kombatpadel.com.ar/es/indumentaria/buzo-capucha-gris#/10-talla-s" },
+    { nombre: "Remera gris LTD Herat", keywords: ["remera", "gris", "herat", "hombre"], url: "https://kombatpadel.com.ar/es/indumentaria/remera-ltd-herat#/3-talla-xl" },
+    { nombre: "Remera rosa LTD Magnesia", keywords: ["remera", "rosa", "magnesia", "hombre"], url: "https://kombatpadel.com.ar/es/indumentaria/remera-ltd-magnesia#/1-talla-m" },
+    { nombre: "Remera verde LTD Opis", keywords: ["remera", "verde", "opis", "hombre"], url: "https://kombatpadel.com.ar/es/indumentaria/remera-ltd-opis#/20-talla-xxxl" },
+    { nombre: "Remera azul LTD Phintias", keywords: ["remera", "azul", "phintias", "hombre"], url: "https://kombatpadel.com.ar/es/indumentaria/remera-ltd-phintias#/3-talla-xl" },
+    { nombre: "Remera blanca Captain", keywords: ["remera", "blanca", "captain", "hombre"], url: "https://kombatpadel.com.ar/es/indumentaria/remera-captain-blanco#/2-talla-l" },
+    { nombre: "Remera negra Captain", keywords: ["remera", "negra", "captain", "hombre"], url: "https://kombatpadel.com.ar/es/indumentaria/remera-captain-negro#/2-talla-l" },
+    { nombre: "Short Capture negro", keywords: ["short", "capture", "negro"], url: "https://kombatpadel.com.ar/es/indumentaria/remera-captain-negro#/2-talla-l" },
+    { nombre: "Remera Division celeste (mujer)", keywords: ["remera", "division", "celeste", "mujer"], url: "https://kombatpadel.com.ar/es/indumentaria/remera-juego-division#/2-talla-l" },
+    { nombre: "Musculosa Draft negra (mujer)", keywords: ["musculosa", "draft", "negra", "mujer"], url: "https://kombatpadel.com.ar/es/ropa-y-accesorios/musculosa-juego-draft#/2-talla-l" },
+    { nombre: "Pollera Drag celeste", keywords: ["pollera", "drag", "celeste"], url: "https://kombatpadel.com.ar/es/indumentaria/pollera-drag#/2-talla-l" },
+    { nombre: "Pollera Depot negra", keywords: ["pollera", "depot", "negra"], url: "https://kombatpadel.com.ar/es/indumentaria/pollera-depot#/2-talla-l" },
+  ],
+};
 
-    
-    
-    
+
+// Función auxiliar para normalizar texto
+const normalize = (text: string): string =>
+  text
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "") // quita acentos
+    .replace(/[^a-z0-9\s]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+// Función de búsqueda
+function buscarProductos(
+  query: string,
+  categoria: "palas" | "accesorios" | "indumentaria" | "todas" = "todas"
+): ProductoKombat[] {
+  const queryNorm = normalize(query);
+  const queryTerms = queryNorm.split(" ").filter((t) => t.length > 1);
+
+  // Obtener productos según categoría
+  let productos: ProductoKombat[] = [];
+
+  if (categoria === "todas" || categoria === "palas") {
+    productos.push(
+      ...KATALOGO_PRODUCTOS_KOMBAT.palas.map((p) => ({ ...p, categoria: "palas" as const }))
+    );
+  }
+  if (categoria === "todas" || categoria === "accesorios") {
+    productos.push(
+      ...KATALOGO_PRODUCTOS_KOMBAT.accesorios.map((p) => ({ ...p, categoria: "accesorios" as const }))
+    );
+  }
+  if (categoria === "todas" || categoria === "indumentaria") {
+    productos.push(
+      ...KATALOGO_PRODUCTOS_KOMBAT.indumentaria.map((p) => ({ ...p, categoria: "indumentaria" as const }))
+    );
+  }
+
+  // Buscar coincidencias
+  const resultados = productos
+    .map((producto) => {
+      const nombreNorm = normalize(producto.nombre);
+      const keywordsNorm = producto.keywords.map(normalize);
+
+      // Calcular relevancia
+      let relevancia = 0;
+
+      // Match exacto en nombre
+      if (nombreNorm.includes(queryNorm)) {
+        relevancia += 10;
+      }
+
+      // Match en keywords
+      for (const kw of keywordsNorm) {
+        if (queryNorm.includes(kw) || kw.includes(queryNorm)) {
+          relevancia += 5;
+        }
+      }
+
+      // Match parcial por términos
+      for (const term of queryTerms) {
+        if (nombreNorm.includes(term)) relevancia += 2;
+        if (keywordsNorm.some((kw) => kw.includes(term))) relevancia += 1;
+      }
+
+      return { ...producto, relevancia };
+    })
+    .filter((p) => p.relevancia > 0)
+    .sort((a, b) => b.relevancia - a.relevancia)
+    .slice(0, 5); // Top 5 resultados
+
+  return resultados;
+}
+
+// Tool definition
+export const linkProductoTool = tool(
+  async ({ query, categoria = "todas" }) => {
+    const resultados = buscarProductos(query, categoria);
+
+    if (resultados.length === 0) {
+      return {
+        encontrado: false,
+        productos: [],
+        mensaje: `No encontré productos que coincidan con "${query}". Podés ver todo el catálogo en: https://kombatpadel.com.ar`,
+      };
+    }
+
+    const productosFormateados = resultados.map((p) => ({
+      nombre: p.nombre,
+      url: p.url,
+      categoria: p.categoria,
+      
+    }));
+
+    // Generar mensaje amigable
+    const topProducto = productosFormateados[0];
+    let mensaje = `Encontré: ${topProducto.nombre}\n👉 ${topProducto.url}`;
+
+    if (productosFormateados.length > 1) {
+      mensaje += `\n\nTambién podría interesarte:\n`;
+      mensaje += productosFormateados
+        .slice(1, 3)
+        .map((p) => `- ${p.nombre}: ${p.url}`)
+        .join("\n");
+    }
+
+    console.log("mensaje", mensaje);
+
+    return {
+      encontrado: true,
+      productos: productosFormateados,
+      mensaje,
+    };
+  },
+  {
+    name: "link_producto_kombat",
+    description:
+      "Busca el link directo a un producto específico de KOMBAT (palas, accesorios, indumentaria). Usar cuando el cliente pregunta por un producto específico y se necesita el link para comprarlo o verlo.",
+    schema: z.object({
+      query: z
+        .string()
+        .describe("Nombre del producto o keywords (ej: 'osorno', 'mochila', 'bolso vulcano', 'pampa', 'hunter', 'vulcano', 'etna', 'vesubio', 'teide', 'fuji', 'galeras', 'krakatoa')"),
+      categoria: z
+        .enum(["palas", "accesorios", "indumentaria", "todas"])
+        .default("todas")
+        .describe("Categoría donde buscar"),
+    }),
+  }
+);
+
+const tema = `
+Eres un subAgente de ventas de KOMBAT Padel que respondes al agente principal, eres encargado de resolver una consulta relacionada con la oferta comercial de la tienda Kombat, basandote en la informacion que tienes a continuación:
+
+   
+## TONO Y FORMA DE RESPUESTA
+- "En base a la consulta del cliente: <query> , mi respuesta es: <respuesta>"
+
+
 - Oferta válida: FEBRERO
 - Disponible solo en la web: https://www.kombatpadel.com.ar
 - Pago contado (medios): transferencia, débito, crédito en 1 cuota, efectivo
@@ -39,18 +217,40 @@ Reglas:
 3) Si preguntan “¿incluye descuento?” => confirmar que el precio ya es final.
 4) Siempre cerrá con una pregunta para avanzar (ej: “¿Qué pala o pack te interesa y para qué nivel jugás?”).
 
-    `
-    return `
-    - Web: www.kombatpadel.com.ar
-    - Pago: SOLO CONTADO (transferencia / débito / crédito 1 cuota / efectivo)
-    - Cuotas sin interés: NO DISPONIBLE
-    `;
+
+`
+
+export const tiendaKombatTool = tool(
+  async ({ query }: { query: string }) => {
+    const model = new ChatOpenAI({
+      model: "gpt-4o",
+      apiKey: process.env.OPENAI_API_KEY,
+    });
+
+    // 1. Definir el template con variables entre llaves
+    const prompt = ChatPromptTemplate.fromMessages([
+      ["system", "Eres un asistente experto en {tema}."],
+      ["human", "{query}."],
+    ]);
+
+    // 2. Crear la cadena
+    const chain = prompt.pipe(model);
+
+    // 3. Invocar con la información dinámica
+    const response = await chain.invoke({
+      tema: tema,
+      query: query,
+    });
+
+    console.log("response", response.content as string);
+
+    return `${response.content}`
   },
   {
-    name: "tienda_kombat",
+    name: "tienda_kombat_oferta_comercial",
     description: "Obtiene la información relacionada con la oferta comercial de la tienda Kombat, sin cuotas, solo pago contado, transferencias, débito, crédito en 1 cuota, efectivo",
     schema: z.object({
-      query: z.string().describe("La consulta del cliente relacionada sobre precios "),
+      query: z.string().describe("La consulta del cliente relacionada sobre precios de la tienda Kombat sin cuotas "),
     }),
   }
 )
@@ -594,16 +794,7 @@ export const infoCatalogoVulcano = tool(
 // Tool: búsqueda vectorial con preFilter
 const SearchInput = z.object({
   query: z.string().min(1),
-  orgId: z.string().min(1),
-  agentId: z.string().min(1),
-  docId: z.string().min(1),
-  title: z.string().describe("El título del documento").nullable(),
-  product: z.string().describe("El producto del documento").nullable(),
-  // ejemplos de filtros “de negocio”
-  category: z.string().nullable(),
-  brands: z.array(z.string()).nullable(),
-
-  k: z.number().int().min(1).max(20).default(6),
+  
 });
 export const infoPalasKombat = tool(
   async (input, config: LangGraphRunnableConfig) => {
@@ -629,7 +820,7 @@ export const infoPalasKombat = tool(
 
       const results = await vectorStore.similaritySearchWithScore(
         input.query,
-        input.k,
+        6,
         { preFilter: { $and: and } },
       );
 

@@ -13,61 +13,69 @@ import {
   END,
   MemorySaver,
 } from "@langchain/langgraph";
-import { buildPromptKombatV2 } from "./prompts.js";
-import { routerSchema } from "./schemas.mjs";
+import { buildAgentPrompt, FAQ_SYSTEM_PROMPT } from "./promptV2.js";
+import { FaqOutput, faqSchema, RouterOutputSimple, routerSchemaSimple } from "./schemas.mjs";
 // import { buildPromptKombat } from "./prompts.js";
 
-import { priceTool, infoCatalogoVulcano, infoPalasKombat } from "./tools.js";
+import { priceTool, infoCatalogoVulcano, infoPalasKombat, tiendaKombatTool,linkProductoTool } from "./tools.js";
 
 const model = new ChatOpenAI({
   model: "gpt-5-mini",
 
-  apiKey: process.env.OPENAI_API_KEY_WIN_2_WIN,
+  apiKey: process.env.OPENAI_API_KEY,
 });
 
-const tools = [infoPalasKombat, priceTool, infoCatalogoVulcano];
+const tools = [infoPalasKombat, priceTool, infoCatalogoVulcano, tiendaKombatTool, linkProductoTool];
 
-tools.forEach((tool) => {
-  console.log("tool name");
-  console.log(tool.name);
-});
+
 // const modelWithTools = model.bindTools(tools);
 
 const MessagesState = Annotation.Root({
   ...MessagesAnnotation.spec,
-  derivation: Annotation<Record<string, unknown> | null>,
+  faqResult: Annotation<FaqOutput | null>({
+    reducer: (_, next) => next,
+    default: () => null,
+  }),
+  derivation: Annotation<RouterOutputSimple | null>({
+    reducer: (_, next) => next,
+    default: () => null,
+  }),
 });
 
-const buildModel = (config: any) => {
-  let modelWithTools = model;
-  if (config?.area === "ventas") {
-    console.log("Derivado a ventas");
-    modelWithTools.bindTools([priceTool]);
-  } else if (config?.area === "soporte técnico") {
-    console.log("Derivado a soporte ");
-    modelWithTools.bindTools([infoPalasKombat, infoCatalogoVulcano]);
-  }
 
-  return modelWithTools;
+
+// Función condicional después del FAQ
+const afterFaq = (state: typeof MessagesState.State) => {
+  const faqResult = state.faqResult;
+  
+  // Si es FAQ con respuesta completa, terminamos
+  if (faqResult?.isFaq && faqResult.answer && !faqResult.requiere_tool) {
+    return "faqResponseNode";
+  }
+  
+  // Si no es FAQ o necesita herramientas, pasamos al router
+  return "router";
+}
+
+// Nodo que genera la respuesta FAQ final
+const faqResponseNode = async (state: typeof MessagesState.State) => {
+  const answer = state.faqResult?.answer || "No tengo esa información.";
+  
+  return {
+    messages: [new AIMessage({ content: answer })],
+  };
 };
+
 
 const llmCall = async (state: typeof MessagesState.State) => {
   const { messages, derivation } = state;
-  if (derivation && derivation.mas_info) {
-    console.log("Necesita mas info de un agente especifico");
-    return {
-      messages: [
-        ...messages,
-        new AIMessage(String(derivation.respuesta_sugerida)),
-      ],
-    };
-  }
-  const prompt = buildPromptKombatV2(derivation || {});
-  const sysMessage = new SystemMessage(prompt);
+  // Construir prompt dinámico según la derivación
+  const systemPrompt = buildAgentPrompt(derivation);
   const modelWithTools = model.bindTools(tools);
-
-  const response = await modelWithTools.invoke([sysMessage, ...messages]);
-  console.log("response", response);
+  const response = await modelWithTools.invoke([
+    new SystemMessage(systemPrompt),
+    ...messages,
+  ]);
   return { messages: [response] };
 };
 
@@ -75,130 +83,301 @@ const toolNode = new ToolNode(tools);
 
 const router = async (state: typeof MessagesState.State) => {
   const messages = state.messages;
-  const systemRouter = `
-  Eres encargado de decidir hacia el área que debe ser derivado el usuario  para que su respuesta sea atendida correctamente si es que en este contexto no encuentras la respuesta a su consulta.
+  const ROUTER_SYSTEM_PROMPT = `
+# ROL
 
-  Las áreas disponibles son 'ventas' , 'soporte técnico', 'general'.
+Sos el enrutador de consultas de KOMBAT Padel. Tu única función es clasificar el mensaje del cliente y determinar a qué área debe dirigirse para ser atendido correctamente.
 
-  - Si el usuario realiza una consulta relacionada con información de precios, promociones, beneficios, bancos, descuentos, formas de pago y/o relacionado a la compra de un producto kombat debes derivarlo al área de 'ventas'.
+---
 
-  - Si el usuario realiza una consulta relacionada con información técnica de los productos, características, materiales, diferencias entre modelos, usos y/o relacionado a aspectos técnicos de un producto kombat debes derivarlo al área de 'soporte técnico'.
+# ÁREAS DISPONIBLES
 
-  - Si el usuario realiza una consulta relacionada con temas generales como envíos, devoluciones, reclamos, garantías, facturación y/o cualquier otra consulta que no esté relacionada con los puntos anteriores debes derivarlo al área 'general'.
+## 1. VENTAS_TIENDA
+Consultas sobre compras en la tienda oficial (pago contado).
+**Señales:** precio, descuento, cuánto sale, contado, transferencia, débito, pack, oferta tienda, web oficial, quiero ver, quiero comprar [producto específico]
 
-  En el campo 'reason' debes explicar brevemente por qué se eligió esa área, para que el modelo que reciba esta información lo entienda claramente.
+## 2. VENTAS_BANCOS
+Consultas sobre compras con financiación bancaria.
+**Señales:** cuotas, sin interés, Banco Nación, Banco Provincia, financiar, pagar en cuotas, tienda BNA, Provincia Compras
 
-  - En el campo 'mas_info' debes indicar si se necesita más información de un agente especifico de ventas o soporte técnico, si es 'true' quiere decir que necesita mas información y si es 'false' quiere decir que no necesita más información y la respuesta sugerida es suficiente.
+## 3. ASESORAMIENTO_PRODUCTO
+El cliente necesita ayuda para elegir un producto o quiere info técnica.
+**Señales:** qué pala me recomendás, no sé cuál elegir, para mi nivel, características, forma, dureza, balance, carbono, diferencia entre, comparar, cómo es la [pala]
 
-  En el campo 'respuesta_sugerida' debes incluir la respuesta sugerida al usuario en base a las políticas oficiales de la empresa. Si la consulta es un saludo simple (como 'hola', 'buenos días'), genera una respuesta sugerida breve: solo un saludo de vuelta y pregunta en qué puede ayudar.
+## 4. RECLAMO
+El cliente tiene un problema con una compra o servicio.
+**Señales:** no llegó, llegó roto, problema, queja, reclamo, devolución, reembolso, mal estado, pedido, error, no me respondieron
 
-  ## información para generar una respuesta suguerida:
-Regla de oro (prioridad absoluta)
+## 5. ENVIOS_LOGISTICA
+Consultas sobre envíos, tiempos de entrega, costos de envío.
+**Señales:** envío, cuánto tarda, costo de envío, hacen envíos a, seguimiento, dónde está mi pedido
 
-Especificaciones técnicas / “qué modelo me conviene” (Línea Vulcano): responder usando CATALOGO_VULCANO (inmutable). No mezclar precios acá.
+## 6. MAYORISTA
+Quiere comprar por cantidad para reventa.
+**Señales:** mayorista, revender, por mayor, cantidad, precio por lote, distribuidor, para mi club
 
-Precios, promos, cuotas y bancos: responder usando DATOS_PRECIOS (y las promos por banco).
+## 7. INFO_GENERAL
+Consultas generales sobre la marca, horarios, contacto, programas.
+**Señales:** horario, dónde están, contacto, teléfono, Instagram, quiénes son, kombat en cancha, programa de profes
 
-Intenciones típicas a enrutar
+## 8. SALUDO
+Mensaje inicial sin consulta específica.
+**Señales:** hola, buenas, buen día, buenas tardes, qué tal (sin pregunta adicional)
 
-Consulta técnica / recomendación de modelo (Vulcano)
+## 9. FUERA_DE_ALCANCE
+No tiene relación con KOMBAT ni pádel.
+**Señales:** temas no relacionados con pádel, productos de otras marcas, spam
 
-Disparadores: “características”, “dureza”, “balance”, “forma”, “control/potencia”, “qué modelo me conviene”, “soy principiante/intermedio”.
+---
 
-Acción: usar CATALOGO_VULCANO (modelos: Arenal, Etna, Fuji, Galeras, Krakatoa, Osorno, Teide, Vesubio + Vulcano 2024: Navy Seal, Hunter, Magnum).
+# REGLAS DE CLASIFICACIÓN
 
-Tip extra: si pide “diamante / potencia”, explicar breve + recomendar Vesubio/Teide/Etna/Arenal (aclarar que Krakatoa es redonda).
+## Prioridad (si hay ambigüedad)
+1. RECLAMO siempre tiene prioridad máxima (cliente con problema)
+2. Si menciona cuotas/bancos → VENTAS_BANCOS
+3. Si menciona precio/descuento sin cuotas → VENTAS_TIENDA
+4. Si pide recomendación o compara → ASESORAMIENTO_PRODUCTO
+5. Si es saludo puro sin pregunta → SALUDO
 
-Precios / descuentos / packs / cuotas
+## Mensajes compuestos
+Si el mensaje tiene múltiples intenciones, clasificá por la **intención principal** (la que requiere acción primero).
 
-Disparadores: “precio”, “promo”, “descuento”, “cuotas”, “sin interés”, “Banco Nación/Provincia”.
+Ejemplo: "Hola, cuánto sale la Vulcano en cuotas?"
+- Tiene saludo + consulta de precio con cuotas
+- Intención principal: VENTAS_BANCOS
 
-Acción: consultar DATOS_PRECIOS y ofrecer el canal correcto:
+## Casos especiales
+- "Quiero comprar" sin más contexto → SALUDO (necesita más info)
+- "Tienen stock de X?" → VENTAS_TIENDA (es consulta de compra)
+- "Quiero ver la Osorno" → VENTAS_TIENDA (quiere info del producto)
+- "Cómo es la Krakatoa?" → ASESORAMIENTO_PRODUCTO (quiere specs)
+- "No me respondieron" + queja → RECLAMO
+- Mensaje con insultos o agresivo → RECLAMO (priorizar contención)
 
-Banco Nación: link compra TiendaBNA + cuotas (12 o 24 según fechas).
+---
 
-Banco Provincia: link Provincia Compras + cuotas (6 o 18 según fechas).
+# HERRAMIENTAS POR ÁREA
 
-Cierre sugerido: preguntar “¿Sos cliente del banco?” + pasar link directo.
+El agente usará estas herramientas según el área. Vos solo sugerís la principal.
 
-Cómo comprar / hacer pedido
+| Área | Herramienta principal | Herramientas secundarias |
+|------|----------------------|-------------------------|
+| VENTAS_TIENDA | tienda_kombat_oferta_comercial | link_producto_kombat |
+| VENTAS_BANCOS | precios_y_promociones_vigentes | link_producto_kombat |
+| ASESORAMIENTO_PRODUCTO (recomendación) | como_elegir_palas_kombat | link_producto_kombat, tienda_kombat_oferta_comercial |
+| ASESORAMIENTO_PRODUCTO (specs/comparar) | info_catalogo_vulcano | link_producto_kombat |
+| RECLAMO | ninguna | - |
+| ENVIOS_LOGISTICA | ninguna | - |
+| MAYORISTA | ninguna | - |
+| INFO_GENERAL | ninguna | link_producto_kombat (si preguntan por producto) |
+| SALUDO | ninguna | - |
+| FUERA_DE_ALCANCE | ninguna | - |
 
-Disparadores: “cómo compro”, “cómo hago el pedido”, “link”, “carrito”.
+---
 
-Respuesta base: entrar a kombatpadel.com.ar → carrito → finalizar → promos por canal → llega seguimiento por mail.
+# FORMATO DE RESPUESTA
 
-Envíos / seguimiento
+Respondé ÚNICAMENTE con un JSON válido COMO EL SCHEMA PROVISTO:
 
-Disparadores: “envío”, “cuánto tarda”, “seguimiento”, “código”.
 
-Respuesta base: 2–7 días hábiles a domicilio; tras despacho llega mail de Shipnow con código.
 
-Retiro / local
+### Campo herramienta_sugerida (solo la principal)
+- VENTAS_TIENDA → "tienda_kombat_oferta_comercial"
+- VENTAS_BANCOS → "precios_y_promociones_vigentes"
+- ASESORAMIENTO_PRODUCTO (recomendación) → "como_elegir_palas_kombat"
+- ASESORAMIENTO_PRODUCTO (specs/comparar) → "info_catalogo_vulcano"
+- Otros → null
 
-Disparadores: “retiro”, “sucursal”, “local”.
+---
 
-Respuesta base: no hay local a la calle; venta online + envío. “Puntos de test” solo si el cliente lo pide (ofrecer ayudar por canales oficiales).
+# EJEMPLOS
 
-Accesorios / funda
+## Ejemplo 1
+**Mensaje:** "Hola buenas tardes"
+**Respuesta:**
+{
+  "area": "SALUDO",
+  "confianza": "alta",
+  "intencion_detectada": "saludo inicial sin consulta específica",
+  "requiere_herramienta": false,
+  "herramienta_sugerida": null
+}
 
-Disparadores: “incluye funda”, “viene con funda”.
+## Ejemplo 2
+**Mensaje:** "Cuánto sale la Vulcano?"
+**Respuesta:**
+{
+  "area": "VENTAS_TIENDA",
+  "confianza": "alta",
+  "intencion_detectada": "consulta precio pala Vulcano",
+  "requiere_herramienta": true,
+  "herramienta_sugerida": "tienda_kombat_oferta_comercial"
+}
 
-Respuesta base: no incluye; viene en caja protectora.
+## Ejemplo 3
+**Mensaje:** "Tienen cuotas sin interés con banco nación?"
+**Respuesta:**
+{
+  "area": "VENTAS_BANCOS",
+  "confianza": "alta",
+  "intencion_detectada": "consulta financiación Banco Nación",
+  "requiere_herramienta": true,
+  "herramienta_sugerida": "precios_y_promociones_vigentes"
+}
 
-Reclamo / producto defectuoso
+## Ejemplo 4
+**Mensaje:** "Qué pala me recomiendan para alguien que recién empieza?"
+**Respuesta:**
+{
+  "area": "ASESORAMIENTO_PRODUCTO",
+  "confianza": "alta",
+  "intencion_detectada": "recomendación de pala para principiante",
+  "requiere_herramienta": true,
+  "herramienta_sugerida": "como_elegir_palas_kombat"
+}
 
-Disparadores: “vino roto”, “reclamo”, “garantía”, “cambio”.
+## Ejemplo 5
+**Mensaje:** "Compré hace 10 días y no me llegó nada"
+**Respuesta:**
+{
+  "area": "RECLAMO",
+  "confianza": "alta",
+  "intencion_detectada": "reclamo por pedido no entregado",
+  "requiere_herramienta": false,
+  "herramienta_sugerida": null
+}
 
-Proceso fijo:
+## Ejemplo 6
+**Mensaje:** "Hacen envíos a Mendoza? Cuánto sale?"
+**Respuesta:**
+{
+  "area": "ENVIOS_LOGISTICA",
+  "confianza": "alta",
+  "intencion_detectada": "consulta envío y costo a Mendoza",
+  "requiere_herramienta": false,
+  "herramienta_sugerida": null
+}
 
-empatizar, 2) pedir nº pedido o email, 3) no prometer, 4) derivar a tienda@kombatpadel.com.ar
-, 5) cerrar con empatía (“24–48hs” contacto).
+## Ejemplo 7
+**Mensaje:** "Quiero comprar 20 palas para mi club"
+**Respuesta:**
+{
+  "area": "MAYORISTA",
+  "confianza": "alta",
+  "intencion_detectada": "compra mayorista para club",
+  "requiere_herramienta": false,
+  "herramienta_sugerida": null
+}
 
-Factura A
+## Ejemplo 8
+**Mensaje:** "Qué diferencia hay entre la Osorno y la Vesubio?"
+**Respuesta:**
+{
+  "area": "ASESORAMIENTO_PRODUCTO",
+  "confianza": "alta",
+  "intencion_detectada": "comparativa entre modelos Osorno y Vesubio",
+  "requiere_herramienta": true,
+  "herramienta_sugerida": "info_catalogo_vulcano"
+}
 
-Disparadores: “factura A”, “CUIT”.
+## Ejemplo 9
+**Mensaje:** "La pala me llegó con una rajadura, es inaceptable"
+**Respuesta:**
+{
+  "area": "RECLAMO",
+  "confianza": "alta",
+  "intencion_detectada": "reclamo producto defectuoso",
+  "requiere_herramienta": false,
+  "herramienta_sugerida": null
+}
 
-Respuesta base: solo si el CUIT tiene actividad de venta de artículos deportivos; escribir a tienda@kombatpadel.com.ar
-.
+## Ejemplo 10
+**Mensaje:** "Hola, vi que tienen promos con bancos, cuáles son?"
+**Respuesta:**
+{
+  "area": "VENTAS_BANCOS",
+  "confianza": "alta",
+  "intencion_detectada": "consulta promociones bancarias",
+  "requiere_herramienta": true,
+  "herramienta_sugerida": "precios_y_promociones_vigentes"
+}
 
-Fabricación / origen
+## Ejemplo 11
+**Mensaje:** "Quiero ver la Osorno"
+**Respuesta:**
+{
+  "area": "VENTAS_TIENDA",
+  "confianza": "alta",
+  "intencion_detectada": "quiere ver/comprar pala Osorno",
+  "requiere_herramienta": true,
+  "herramienta_sugerida": "tienda_kombat_oferta_comercial"
+}
 
-Disparadores: “dónde se fabrican”.
+## Ejemplo 12
+**Mensaje:** "Cómo es la Krakatoa? Es buena para defensa?"
+**Respuesta:**
+{
+  "area": "ASESORAMIENTO_PRODUCTO",
+  "confianza": "alta",
+  "intencion_detectada": "consulta características Krakatoa para estilo defensivo",
+  "requiere_herramienta": true,
+  "herramienta_sugerida": "info_catalogo_vulcano"
+}
 
-Respuesta base: principalmente en China, fábricas de alta calidad.
+## Ejemplo 13
+**Mensaje:** "Qué es Kombat en Cancha?"
+**Respuesta:**
+{
+  "area": "INFO_GENERAL",
+  "confianza": "alta",
+  "intencion_detectada": "consulta sobre programa Kombat en Cancha",
+  "requiere_herramienta": false,
+  "herramienta_sugerida": null
+}
 
-Garantía
+---
 
-Disparadores: “garantía”, “cuánto dura”.
+# NOTAS FINALES
 
-Respuesta base: 3 meses desde la compra (reparación o reemplazo por defecto o inconformidad).
-
-  ´## Canales oficiales
-- WhatsApp: +54 9 11 72270778 (atención al cliente)
-- Reclamos: tienda@kombatpadel.com.ar
-- Mayoristas: julian@ipacsa.com.ar
-- Instagram: @kombatpadelargentina
-
-  **Debes respetar la salida en formato JSON con el esquema provisto**
-  `;
+- Respondé SOLO el JSON, nada más
+- Si no podés clasificar con certeza, usá confianza "baja"
+- Ante duda entre VENTAS_TIENDA y VENTAS_BANCOS: ¿mencionó cuotas? Sí → BANCOS, No → TIENDA
+- Ante duda entre VENTAS_TIENDA y ASESORAMIENTO: ¿pregunta precio o características? Precio → TIENDA, Características → ASESORAMIENTO
+- Un mensaje agresivo o con insultos siempre es RECLAMO
+- El agente decidirá si usa herramientas secundarias como link_producto_kombat
+`;
 
   const modelRouter = new ChatOpenAI({
-    model: "gpt-4o",
+    model: "gpt-4o-mini",
     apiKey: process.env.OPENAI_API_KEY,
-  }).withStructuredOutput(routerSchema, { strict: true });
+  }).withStructuredOutput(routerSchemaSimple, { strict: true });
 
   const response = await modelRouter.invoke([
-    new SystemMessage(systemRouter),
+    new SystemMessage(ROUTER_SYSTEM_PROMPT),
     ...messages,
   ]);
 
-  return { messages: messages, derivation: response };
+  return { derivation: response };
 };
 
-const ventasNode = async (state: typeof MessagesState.State) => {
-  console.log("Derivado a ventas");
-  const { messages, derivation } = state;
-  return {};
+const faqNode = async (state: typeof MessagesState.State) => {
+  const messages = state.messages;
+
+  const model = new ChatOpenAI({
+    model: "gpt-4o-mini", // Modelo económico para clasificación
+    temperature: 0,
+    apiKey: process.env.OPENAI_API_KEY,
+  }).withStructuredOutput(faqSchema, { strict: true });
+
+  const response = await model.invoke([
+    new SystemMessage(FAQ_SYSTEM_PROMPT),
+    ...messages,
+  ]);
+
+  return { 
+    messages: messages, 
+    faqResult: response 
+  };
 };
 
 const shouldContinue = (state: typeof MessagesState.State) => {
@@ -210,10 +389,14 @@ const shouldContinue = (state: typeof MessagesState.State) => {
 
 const graphKombat = new StateGraph(MessagesState)
   .addNode("llmCall", llmCall)
+  .addNode("faqNode", faqNode)
+  .addNode("faqResponseNode", faqResponseNode)
   .addNode("router", router)
   .addNode("toolNode", toolNode)
-  .addEdge(START, "router")
+  .addEdge(START, "faqNode")
+  .addConditionalEdges("faqNode", afterFaq, ["faqResponseNode", "router"])
   .addEdge("router", "llmCall")
+  .addEdge("faqResponseNode", END)
   .addConditionalEdges("llmCall", shouldContinue, ["toolNode", END])
   .addEdge("toolNode", "llmCall");
 
