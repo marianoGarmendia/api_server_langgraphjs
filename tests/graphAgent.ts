@@ -3,6 +3,7 @@ import { ChatOpenAI } from "@langchain/openai";
 import {
   
   AIMessage,
+  RemoveMessage,
   SystemMessage,
 } from "@langchain/core/messages";
 import {
@@ -13,8 +14,8 @@ import {
   END,
   MemorySaver,
 } from "@langchain/langgraph";
-import { buildAgentPrompt, FAQ_SYSTEM_PROMPT } from "./promptV2.js";
-import { FaqOutput, faqSchema, RouterOutputSimple, routerSchemaSimple } from "./schemas.mjs";
+import { buildAgentPrompt, FAQ_SYSTEM_PROMPT, SUMMARIZE_SYSTEM_PROMPT } from "./promptV2.js";
+import { FaqOutput, faqSchema, RouterOutputSimple, routerSchemaSimple, summarizeSchema, SummarizeOutput } from "./schemas.mjs";
 // import { buildPromptKombat } from "./prompts.js";
 
 import { priceTool, infoCatalogoVulcano, infoPalasKombat, tiendaKombatTool,linkProductoTool } from "./tools.js";
@@ -36,11 +37,53 @@ const MessagesState = Annotation.Root({
     reducer: (_, next) => next,
     default: () => null,
   }),
+  summarizeResult: Annotation<SummarizeOutput | null>({
+    reducer: (_, next) => next,
+    default: () => null,
+  }),
+
   derivation: Annotation<RouterOutputSimple | null>({
     reducer: (_, next) => next,
     default: () => null,
   }),
 });
+
+// Obtener el state por thread_id
+export const getStateByThreadId = async (threadId: string) => {
+  const config = {
+    configurable: {
+      thread_id: threadId,
+    },
+  }
+  const state = await workflow.getState(config)
+  return state
+}
+
+
+
+export const getStateOfLead = async  (threadId: string) => {
+  
+  const model = new ChatOpenAI({
+    model: "gpt-4o-mini",
+    apiKey: process.env.OPENAI_API_KEY,
+  }).withStructuredOutput(summarizeSchema, { strict: true }).withConfig({tags:['nostream']});
+  const summarizePrompt = SUMMARIZE_SYSTEM_PROMPT
+
+  const config = {
+    configurable: {
+      thread_id: threadId,
+    },
+  }
+  const state = await workflow.getState(config)
+  const messages = state.values.messages;
+
+  const response = await model.invoke([
+    new SystemMessage(summarizePrompt),
+    ...messages,
+  ]);
+
+  return response as SummarizeOutput;
+};
 
 
 
@@ -65,6 +108,10 @@ const faqResponseNode = async (state: typeof MessagesState.State) => {
     messages: [new AIMessage({ content: answer })],
   };
 };
+
+const appendCustomerNode = async (state: typeof MessagesState.State) => {
+
+}
 
 
 const llmCall = async (state: typeof MessagesState.State) => {
@@ -403,31 +450,72 @@ const graphKombat = new StateGraph(MessagesState)
 const checkpointer = new MemorySaver();
 export const workflow = graphKombat.compile({ checkpointer });
 
+// workflow.updateState({
+//   messages: [new HumanMessage("Hola, cuánto sale la Vulcano?")],
+// });
+
 // Ejemplo de uso:
-// async function demo() {
-//   const orgId = "kombatpadel";
-//   const agentId = "agent_wsp";
-//   const title = "como_elegir_palas_kombat";
+async function demo() {
+  // const orgId = "kombatpadel";
+  // const agentId = "agent_wsp";
+  // const title = "como_elegir_palas_kombat";
 
-//   const question = `Soy principiante en el padel y quiero elegir una pala. Me gustaria que me recomiendes una pala.`;
+  const question = `Hacen envíos?`;
+  
+  const config = {
+    configurable: {
+      thread_id: "12345",
+    },
+  }
+  const result = await workflow.invoke(
+    {
+      messages: [question],
+    },
+    config
+  );
 
-//   const result = await workflow.invoke(
-//     {
-//       messages: [new HumanMessage(question)],
-//     },
-//     {
-//       configurable: {
-//         thread_id: "1234567890",
-//         orgId: orgId,
-//         agentId: agentId,
-//         title: title,
-//       },
-//     },
-//   );
+  console.log("response: ");
 
-//   console.log("finished!");
+  console.log(result);
 
-//   console.log(result);
-// }
+
+  const state = await workflow.getState(config);
+
+  console.log("state: ");
+  
+  console.log("---------------------------------")
+ 
+  console.log("messages: ");
+  console.log(state.values.messages);
+  console.log("faqResult: ");
+  console.log(state.values.faqResult);
+  console.log("derivation: ");
+  console.log(state.values.derivation);
+
+  const deletions = state.values.messages.map(
+    (m: any) => new RemoveMessage({ id: m.id })
+  );
+
+  console.log(deletions)
+
+  await workflow.updateState(config, {
+    messages: deletions
+  });
+
+ const newState = await workflow.getState(config)
+
+  console.log("newState: ");
+  console.log(newState);
+  console.log("---------------------------------")
+  console.log("messages: ");
+  console.log(newState.values.messages);
+  console.log("faqResult: ");
+  console.log(newState.values.faqResult);
+  console.log("derivation: ");
+  console.log(newState.values.derivation);
+
+  
+
+}
 
 // demo().catch(console.error);

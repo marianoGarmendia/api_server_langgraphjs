@@ -18,9 +18,71 @@ import { checkpointer } from "./storage/checkpoint.mjs";
 import { store as graphStore } from "./storage/store.mjs";
 import { auth } from "./auth/custom.mjs";
 import { registerAuth } from "./auth/index.mjs";
-import { workflow } from "../tests/graphAgent.js";
+import { workflow, getStateOfLead } from "../tests/graphAgent.js";
+import { getMongoClient } from "./kb/mongoClient.mjs";
 
 const app = new Hono();
+const EXPIRATION_MS = 24 * 60 * 60 * 1000;
+const leadTimers = new Map<
+  string,
+  { timeout: NodeJS.Timeout; threadId: string; conversationNumber: number }
+>();
+
+function clearLeadTimer(telefono: string) {
+  const existing = leadTimers.get(telefono);
+  if (existing) {
+    clearTimeout(existing.timeout);
+    leadTimers.delete(telefono);
+  }
+}
+
+function scheduleLeadExpiration({
+  telefono,
+  threadId,
+  conversationNumber,
+}: {
+  telefono: string;
+  threadId: string;
+  conversationNumber: number;
+}) {
+  clearLeadTimer(telefono);
+
+  const timeout = setTimeout(async () => {
+    try {
+      const { client, db } = await getMongoClient();
+      try {
+        const clientes = db.collection("clientes");
+        const result = await clientes.updateOne(
+          { telefono },
+          { $set: { "conversations.$[conv].expired": true } },
+          {
+            arrayFilters: [
+              {
+                "conv.conversationNumber": conversationNumber,
+                "conv.expired": false,
+              },
+            ],
+          },
+        );
+
+        // Acá es donde tengo que ir a buscar la informacion del cliente al graph, extraer los datos , grabarlos en la base de datos y en el sheet
+        if (result.modifiedCount > 0) {
+          const state = await getStateOfLead(threadId);
+          logger.info("State obtenido por expiración", { threadId });
+          void state;
+        }
+      } finally {
+        await client.close();
+      }
+    } catch (error) {
+      logger.error("Error en expiración de cliente", error);
+    } finally {
+      clearLeadTimer(telefono);
+    }
+  }, EXPIRATION_MS);
+
+  leadTimers.set(telefono, { timeout, threadId, conversationNumber });
+}
 
 // This is used to match the behavior of the original LangGraph API
 // where the content-type is not being validated. Might be nice
@@ -86,6 +148,74 @@ app.post(
   ),
   async (c) => {
     const { query, from, source } = c.req.valid("json");
+
+    const now = new Date();
+    const timeToSave = new Date(now.getTime() + EXPIRATION_MS);
+    try {
+      const { client, db } = await getMongoClient();
+      try {
+        const clientes = db.collection("clientes");
+        const existing = await clientes.findOne<{
+          conversations?: {
+            conversationNumber: number;
+            expired: boolean;
+            createdAt: Date;
+            timeToSave: Date;
+            fecha: Date;
+          }[];
+        }>(
+          { telefono: from },
+          { projection: { conversations: 1 } },
+        );
+
+        const conversations = existing?.conversations ?? [];
+        const lastConversation = conversations[conversations.length - 1];
+
+        if (!lastConversation || lastConversation.expired) {
+          const conversationNumber = (lastConversation?.conversationNumber ?? 0) + 1;
+          const newConversation = {
+            conversationNumber,
+            resumen_conversacion: "",
+            calificacion: "",
+            createdAt: now,
+            timeToSave,
+            expired: false,
+            fecha: now,
+          };
+          if (!existing) {
+            await clientes.insertOne({
+              telefono: from,
+              conversations: [newConversation],
+            });
+          } else {
+            await clientes.updateOne(
+              { telefono: from },
+              { $push: { conversations: newConversation } } as any,
+            );
+          }
+
+          scheduleLeadExpiration({
+            telefono: from,
+            threadId: `${source}:${from}`,
+            conversationNumber,
+          });
+        } else {
+          await clientes.updateOne(
+            { telefono: from },
+            { $set: { "conversations.$[conv].fecha": now } },
+            {
+              arrayFilters: [
+                { "conv.conversationNumber": lastConversation.conversationNumber },
+              ],
+            },
+          );
+        }
+      } finally {
+        await client.close();
+      }
+    } catch (error) {
+      logger.error("Error guardando cliente en MongoDB", error);
+    }
 
     // IMPORTANTE: await
     const state = await workflow.invoke(
