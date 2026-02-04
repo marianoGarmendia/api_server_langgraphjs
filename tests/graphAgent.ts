@@ -1,7 +1,6 @@
 import { ToolNode } from "@langchain/langgraph/prebuilt";
 import { ChatOpenAI } from "@langchain/openai";
 import {
-  
   AIMessage,
   RemoveMessage,
   SystemMessage,
@@ -14,11 +13,28 @@ import {
   END,
   MemorySaver,
 } from "@langchain/langgraph";
-import { buildAgentPrompt, FAQ_SYSTEM_PROMPT, SUMMARIZE_SYSTEM_PROMPT } from "./promptV2.js";
-import { FaqOutput, faqSchema, RouterOutputSimple, routerSchemaSimple, summarizeSchema, SummarizeOutput } from "./schemas.mjs";
+import {
+  buildAgentPrompt,
+  FAQ_SYSTEM_PROMPT,
+  SUMMARIZE_SYSTEM_PROMPT,
+} from "./promptV2.js";
+import {
+  FaqOutput,
+  faqSchema,
+  RouterOutputSimple,
+  routerSchemaSimple,
+  summarizeSchema,
+  SummarizeOutput,
+} from "./schemas.mjs";
 // import { buildPromptKombat } from "./prompts.js";
 
-import { priceTool, infoCatalogoVulcano, infoPalasKombat, tiendaKombatTool,linkProductoTool } from "./tools.js";
+import {
+  priceTool,
+  infoCatalogoVulcano,
+  infoPalasKombat,
+  tiendaKombatTool,
+  linkProductoTool,
+} from "./tools.js";
 
 const model = new ChatOpenAI({
   model: "gpt-5-mini",
@@ -26,8 +42,13 @@ const model = new ChatOpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-const tools = [infoPalasKombat, priceTool, infoCatalogoVulcano, tiendaKombatTool, linkProductoTool];
-
+const tools = [
+  infoPalasKombat,
+  priceTool,
+  infoCatalogoVulcano,
+  tiendaKombatTool,
+  linkProductoTool,
+];
 
 // const modelWithTools = model.bindTools(tools);
 
@@ -48,33 +69,58 @@ const MessagesState = Annotation.Root({
   }),
 });
 
+// Limpiar el estado del graph
+export const cleanState = async ({
+  threadId,
+}: {
+  threadId: string;
+}): Promise<{ success?: boolean; error?: string | null }> => {
+  const config = {
+    configurable: {
+      thread_id: threadId,
+    },
+  };
+  try {
+    const state = await workflow.getState(config);
+    const messages = state.values.messages;
+
+    const deletions = messages.map((m: any) => new RemoveMessage({ id: m.id }));
+    await workflow.updateState(config, {
+      messages: deletions,
+    });
+    return { success: true };
+  } catch (error) {
+    console.error("Error al limpiar el estado", error);
+    return { error: "Error al limpiar el estado" };
+  }
+};
+
 // Obtener el state por thread_id
 export const getStateByThreadId = async (threadId: string) => {
   const config = {
     configurable: {
       thread_id: threadId,
     },
-  }
-  const state = await workflow.getState(config)
-  return state
-}
+  };
+  const state = await workflow.getState(config);
+  return state;
+};
 
-
-
-export const getStateOfLead = async  (threadId: string) => {
-  
+export const getStateOfLead = async (threadId: string) => {
   const model = new ChatOpenAI({
     model: "gpt-4o-mini",
     apiKey: process.env.OPENAI_API_KEY,
-  }).withStructuredOutput(summarizeSchema, { strict: true }).withConfig({tags:['nostream']});
-  const summarizePrompt = SUMMARIZE_SYSTEM_PROMPT
+  })
+    .withStructuredOutput(summarizeSchema, { strict: true })
+    .withConfig({ tags: ["nostream"] });
+  const summarizePrompt = SUMMARIZE_SYSTEM_PROMPT;
 
   const config = {
     configurable: {
       thread_id: threadId,
     },
-  }
-  const state = await workflow.getState(config)
+  };
+  const state = await workflow.getState(config);
   const messages = state.values.messages;
 
   const response = await model.invoke([
@@ -85,34 +131,29 @@ export const getStateOfLead = async  (threadId: string) => {
   return response as SummarizeOutput;
 };
 
-
-
 // Función condicional después del FAQ
 const afterFaq = (state: typeof MessagesState.State) => {
   const faqResult = state.faqResult;
-  
+
   // Si es FAQ con respuesta completa, terminamos
   if (faqResult?.isFaq && faqResult.answer && !faqResult.requiere_tool) {
     return "faqResponseNode";
   }
-  
+
   // Si no es FAQ o necesita herramientas, pasamos al router
   return "router";
-}
+};
 
 // Nodo que genera la respuesta FAQ final
 const faqResponseNode = async (state: typeof MessagesState.State) => {
   const answer = state.faqResult?.answer || "No tengo esa información.";
-  
+
   return {
     messages: [new AIMessage({ content: answer })],
   };
 };
 
-const appendCustomerNode = async (state: typeof MessagesState.State) => {
-
-}
-
+// const appendCustomerNode = async (state: typeof MessagesState.State) => {};
 
 const llmCall = async (state: typeof MessagesState.State) => {
   const { messages, derivation } = state;
@@ -397,7 +438,9 @@ Respondé ÚNICAMENTE con un JSON válido COMO EL SCHEMA PROVISTO:
   const modelRouter = new ChatOpenAI({
     model: "gpt-4o-mini",
     apiKey: process.env.OPENAI_API_KEY,
-  }).withStructuredOutput(routerSchemaSimple, { strict: true }).withConfig({tags:['nostream']});
+  })
+    .withStructuredOutput(routerSchemaSimple, { strict: true })
+    .withConfig({ tags: ["nostream"] });
 
   const response = await modelRouter.invoke([
     new SystemMessage(ROUTER_SYSTEM_PROMPT),
@@ -414,16 +457,18 @@ const faqNode = async (state: typeof MessagesState.State) => {
     model: "gpt-4o-mini", // Modelo económico para clasificación
     temperature: 0,
     apiKey: process.env.OPENAI_API_KEY,
-  }).withStructuredOutput(faqSchema, { strict: true }).withConfig({tags:['nostream']});
+  })
+    .withStructuredOutput(faqSchema, { strict: true })
+    .withConfig({ tags: ["nostream"] });
 
   const response = await model.invoke([
     new SystemMessage(FAQ_SYSTEM_PROMPT),
     ...messages,
   ]);
 
-  return { 
-    messages: messages, 
-    faqResult: response 
+  return {
+    messages: messages,
+    faqResult: response,
   };
 };
 
@@ -455,67 +500,63 @@ export const workflow = graphKombat.compile({ checkpointer });
 // });
 
 // Ejemplo de uso:
-async function demo() {
-  // const orgId = "kombatpadel";
-  // const agentId = "agent_wsp";
-  // const title = "como_elegir_palas_kombat";
+// async function demo() {
+//   // const orgId = "kombatpadel";
+//   // const agentId = "agent_wsp";
+//   // const title = "como_elegir_palas_kombat";
 
-  const question = `Hacen envíos?`;
-  
-  const config = {
-    configurable: {
-      thread_id: "12345",
-    },
-  }
-  const result = await workflow.invoke(
-    {
-      messages: [question],
-    },
-    config
-  );
+//   const question = `Hacen envíos?`;
 
-  console.log("response: ");
+//   const config = {
+//     configurable: {
+//       thread_id: "12345",
+//     },
+//   };
+//   const result = await workflow.invoke(
+//     {
+//       messages: [question],
+//     },
+//     config,
+//   );
 
-  console.log(result);
+//   console.log("response: ");
 
+//   console.log(result);
 
-  const state = await workflow.getState(config);
+//   const state = await workflow.getState(config);
 
-  console.log("state: ");
-  
-  console.log("---------------------------------")
- 
-  console.log("messages: ");
-  console.log(state.values.messages);
-  console.log("faqResult: ");
-  console.log(state.values.faqResult);
-  console.log("derivation: ");
-  console.log(state.values.derivation);
+//   console.log("state: ");
 
-  const deletions = state.values.messages.map(
-    (m: any) => new RemoveMessage({ id: m.id })
-  );
+//   console.log("---------------------------------");
 
-  console.log(deletions)
+//   console.log("messages: ");
+//   console.log(state.values.messages);
+//   console.log("faqResult: ");
+//   console.log(state.values.faqResult);
+//   console.log("derivation: ");
+//   console.log(state.values.derivation);
 
-  await workflow.updateState(config, {
-    messages: deletions
-  });
+//   const deletions = state.values.messages.map(
+//     (m: any) => new RemoveMessage({ id: m.id }),
+//   );
 
- const newState = await workflow.getState(config)
+//   console.log(deletions);
 
-  console.log("newState: ");
-  console.log(newState);
-  console.log("---------------------------------")
-  console.log("messages: ");
-  console.log(newState.values.messages);
-  console.log("faqResult: ");
-  console.log(newState.values.faqResult);
-  console.log("derivation: ");
-  console.log(newState.values.derivation);
+//   await workflow.updateState(config, {
+//     messages: deletions,
+//   });
 
-  
+//   const newState = await workflow.getState(config);
 
-}
+//   console.log("newState: ");
+//   console.log(newState);
+//   console.log("---------------------------------");
+//   console.log("messages: ");
+//   console.log(newState.values.messages);
+//   console.log("faqResult: ");
+//   console.log(newState.values.faqResult);
+//   console.log("derivation: ");
+//   console.log(newState.values.derivation);
+// }
 
 // demo().catch(console.error);

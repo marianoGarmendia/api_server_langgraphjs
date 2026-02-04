@@ -18,11 +18,12 @@ import { checkpointer } from "./storage/checkpoint.mjs";
 import { store as graphStore } from "./storage/store.mjs";
 import { auth } from "./auth/custom.mjs";
 import { registerAuth } from "./auth/index.mjs";
-import { workflow, getStateOfLead } from "../tests/graphAgent.js";
+import { workflow, getStateOfLead, cleanState } from "../tests/graphAgent.js";
 import { getMongoClient } from "./kb/mongoClient.mjs";
+import { appendCustomer } from "../tests/sheet/writeSheet.js";
 
 const app = new Hono();
-const EXPIRATION_MS = 24 * 60 * 60 * 1000;
+const EXPIRATION_MS = 10 * 60 * 1000;
 const leadTimers = new Map<
   string,
   { timeout: NodeJS.Timeout; threadId: string; conversationNumber: number }
@@ -51,10 +52,25 @@ function scheduleLeadExpiration({
     try {
       const { client, db } = await getMongoClient();
       try {
+        const state = await getStateOfLead(threadId);
         const clientes = db.collection("clientes");
         const result = await clientes.updateOne(
           { telefono },
-          { $set: { "conversations.$[conv].expired": true } },
+          {
+            $set: {
+              "conversations.$[conv].expired": true,
+              "conversations.$[conv].cliente": state.cliente || "No definido",
+              "conversations.$[conv].fecha": new Date().toISOString(),
+              "conversations.$[conv].resumen_conversacion": state.resumen,
+              "conversations.$[conv].calificacion": state.calificacion,
+              "conversations.$[conv].motivo_calificacion":
+                state.motivo_calificacion,
+              "conversations.$[conv].productos_mencionados":
+                state.productos_mencionados,
+              "conversations.$[conv].siguiente_accion":
+                state.siguiente_accion || "No definida",
+            },
+          },
           {
             arrayFilters: [
               {
@@ -67,8 +83,39 @@ function scheduleLeadExpiration({
 
         // Acá es donde tengo que ir a buscar la informacion del cliente al graph, extraer los datos , grabarlos en la base de datos y en el sheet
         if (result.modifiedCount > 0) {
-          const state = await getStateOfLead(threadId);
           logger.info("State obtenido por expiración", { threadId });
+          // Actualizar el sheet con la información del cliente
+          const customerSaved = await appendCustomer({
+            cliente: state.cliente || "No definido",
+            telefono: telefono,
+            resumen: state.resumen,
+            calificacion: state.calificacion,
+            motivo_calificacion: state.motivo_calificacion,
+            productos_mencionados: state.productos_mencionados,
+            siguiente_accion: state.siguiente_accion || "No definida",
+            fecha: new Date().toISOString(),
+          });
+
+          if (customerSaved) {
+            logger.info("Cliente agregado correctamente en Google Sheets.");
+          } else {
+            logger.error("Error al agregar cliente en Google Sheets.");
+          }
+
+          // Limpiar el state del graph
+          const cleanStateSaved = await cleanState({ threadId });
+          if (cleanStateSaved.error) {
+            logger.error(
+              "Error al limpiar el estado del graph",
+              cleanStateSaved.error,
+            );
+          }
+
+          if (cleanStateSaved?.success) {
+            logger.info("Estado del graph limpiado correctamente");
+          }
+
+          // Limpiar el state
           void state;
         }
       } finally {
@@ -135,6 +182,14 @@ app.post(
   },
 );
 
+/*
+1 - Envia un msj el usuario, chequeo si existe en la db 
+2 - Si existe, me fijo si expiró su timer
+3 - Si existe y expiró, creo otro timer para guardar una nueva conversación.
+4 - Si existe y no expiró continúo normal
+
+*/
+
 app.use(auth());
 app.post(
   "/agent",
@@ -144,7 +199,7 @@ app.post(
       query: z.string(),
       from: z.string(),
       source: z.string(),
-    })
+    }),
   ),
   async (c) => {
     const { query, from, source } = c.req.valid("json");
@@ -163,16 +218,15 @@ app.post(
             timeToSave: Date;
             fecha: Date;
           }[];
-        }>(
-          { telefono: from },
-          { projection: { conversations: 1 } },
-        );
+        }>({ telefono: from }, { projection: { conversations: 1 } });
 
         const conversations = existing?.conversations ?? [];
+        console.log("conversations: ---> ", conversations);
         const lastConversation = conversations[conversations.length - 1];
 
         if (!lastConversation || lastConversation.expired) {
-          const conversationNumber = (lastConversation?.conversationNumber ?? 0) + 1;
+          const conversationNumber =
+            (lastConversation?.conversationNumber ?? 0) + 1;
           const newConversation = {
             conversationNumber,
             resumen_conversacion: "",
@@ -188,10 +242,9 @@ app.post(
               conversations: [newConversation],
             });
           } else {
-            await clientes.updateOne(
-              { telefono: from },
-              { $push: { conversations: newConversation } } as any,
-            );
+            await clientes.updateOne({ telefono: from }, {
+              $push: { conversations: newConversation },
+            } as any);
           }
 
           scheduleLeadExpiration({
@@ -205,7 +258,10 @@ app.post(
             { $set: { "conversations.$[conv].fecha": now } },
             {
               arrayFilters: [
-                { "conv.conversationNumber": lastConversation.conversationNumber },
+                {
+                  "conv.conversationNumber":
+                    lastConversation.conversationNumber,
+                },
               ],
             },
           );
@@ -221,7 +277,7 @@ app.post(
     const state = await workflow.invoke(
       {
         // IMPORTANTE: si usás MessagesAnnotation, pasá lista de mensajes
-        messages:query,
+        messages: query,
       },
       {
         configurable: {
@@ -229,7 +285,7 @@ app.post(
           from,
           source,
         },
-      }
+      },
     );
 
     // Normalmente querés responder con el último mensaje del assistant
@@ -240,7 +296,7 @@ app.post(
       // opcional: si querés debug
       // messages: state.messages?.map(m => ({ type: m.getType?.(), content: m.content })),
     });
-  }
+  },
 );
 
 app.post(
