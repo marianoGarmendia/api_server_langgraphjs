@@ -21,6 +21,7 @@ import { registerAuth } from "./auth/index.mjs";
 import { workflow, getStateOfLead, cleanState } from "../tests/graphAgent.js";
 import { getMongoClient } from "./kb/mongoClient.mjs";
 import { appendCustomer } from "../tests/sheet/writeSheet.js";
+import { saveState } from "./kb/savedState.mjs";
 
 const app = new Hono();
 const EXPIRATION_MS = 10 * 60 * 1000;
@@ -37,7 +38,7 @@ function clearLeadTimer(telefono: string) {
   }
 }
 
-function scheduleLeadExpiration({
+export function scheduleLeadExpiration({
   telefono,
   threadId,
   conversationNumber,
@@ -204,74 +205,76 @@ app.post(
   async (c) => {
     const { query, from, source } = c.req.valid("json");
 
-    const now = new Date();
-    const timeToSave = new Date(now.getTime() + EXPIRATION_MS);
-    try {
-      const { client, db } = await getMongoClient();
-      try {
-        const clientes = db.collection("clientes");
-        const existing = await clientes.findOne<{
-          conversations?: {
-            conversationNumber: number;
-            expired: boolean;
-            createdAt: Date;
-            timeToSave: Date;
-            fecha: Date;
-          }[];
-        }>({ telefono: from }, { projection: { conversations: 1 } });
+    await saveState({ from, source });
 
-        const conversations = existing?.conversations ?? [];
-        console.log("conversations: ---> ", conversations);
-        const lastConversation = conversations[conversations.length - 1];
+    // const now = new Date();
+    // const timeToSave = new Date(now.getTime() + EXPIRATION_MS);
+    // try {
+    //   const { client, db } = await getMongoClient();
+    //   try {
+    //     const clientes = db.collection("clientes");
+    //     const existing = await clientes.findOne<{
+    //       conversations?: {
+    //         conversationNumber: number;
+    //         expired: boolean;
+    //         createdAt: Date;
+    //         timeToSave: Date;
+    //         fecha: Date;
+    //       }[];
+    //     }>({ telefono: from }, { projection: { conversations: 1 } });
 
-        if (!lastConversation || lastConversation.expired) {
-          const conversationNumber =
-            (lastConversation?.conversationNumber ?? 0) + 1;
-          const newConversation = {
-            conversationNumber,
-            resumen_conversacion: "",
-            calificacion: "",
-            createdAt: now,
-            timeToSave,
-            expired: false,
-            fecha: now,
-          };
-          if (!existing) {
-            await clientes.insertOne({
-              telefono: from,
-              conversations: [newConversation],
-            });
-          } else {
-            await clientes.updateOne({ telefono: from }, {
-              $push: { conversations: newConversation },
-            } as any);
-          }
+    //     const conversations = existing?.conversations ?? [];
+    //     console.log("conversations: ---> ", conversations);
+    //     const lastConversation = conversations[conversations.length - 1];
 
-          scheduleLeadExpiration({
-            telefono: from,
-            threadId: `${source}:${from}`,
-            conversationNumber,
-          });
-        } else {
-          await clientes.updateOne(
-            { telefono: from },
-            { $set: { "conversations.$[conv].fecha": now } },
-            {
-              arrayFilters: [
-                {
-                  "conv.conversationNumber":
-                    lastConversation.conversationNumber,
-                },
-              ],
-            },
-          );
-        }
-      } finally {
-        await client.close();
-      }
-    } catch (error) {
-      logger.error("Error guardando cliente en MongoDB", error);
-    }
+    //     if (!lastConversation || lastConversation.expired) {
+    //       const conversationNumber =
+    //         (lastConversation?.conversationNumber ?? 0) + 1;
+    //       const newConversation = {
+    //         conversationNumber,
+    //         resumen_conversacion: "",
+    //         calificacion: "",
+    //         createdAt: now,
+    //         timeToSave,
+    //         expired: false,
+    //         fecha: now,
+    //       };
+    //       if (!existing) {
+    //         await clientes.insertOne({
+    //           telefono: from,
+    //           conversations: [newConversation],
+    //         });
+    //       } else {
+    //         await clientes.updateOne({ telefono: from }, {
+    //           $push: { conversations: newConversation },
+    //         } as any);
+    //       }
+
+    //       scheduleLeadExpiration({
+    //         telefono: from,
+    //         threadId: `${source}:${from}`,
+    //         conversationNumber,
+    //       });
+    //     } else {
+    //       await clientes.updateOne(
+    //         { telefono: from },
+    //         { $set: { "conversations.$[conv].fecha": now } },
+    //         {
+    //           arrayFilters: [
+    //             {
+    //               "conv.conversationNumber":
+    //                 lastConversation.conversationNumber,
+    //             },
+    //           ],
+    //         },
+    //       );
+    //     }
+    //   } finally {
+    //     await client.close();
+    //   }
+    // } catch (error) {
+    //   logger.error("Error guardando cliente en MongoDB", error);
+    // }
 
     // IMPORTANTE: await
     const state = await workflow.invoke(

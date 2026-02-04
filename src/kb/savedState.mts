@@ -1,0 +1,81 @@
+import { getMongoClient } from "./mongoClient.mjs";
+import { scheduleLeadExpiration } from "../server.mjs";
+import { logger } from "../logging.mjs";
+
+const EXPIRATION_MS = 2 * 60 * 1000;
+
+export const saveState = async ({
+  from,
+  source,
+}: {
+  from: string;
+  source: string;
+}) => {
+  const now = new Date();
+  const timeToSave = new Date(now.getTime() + EXPIRATION_MS);
+  try {
+    const { client, db } = await getMongoClient();
+    try {
+      const clientes = db.collection("clientes");
+      const existing = await clientes.findOne<{
+        conversations?: {
+          conversationNumber: number;
+          expired: boolean;
+          createdAt: Date;
+          timeToSave: Date;
+          fecha: Date;
+        }[];
+      }>({ telefono: from }, { projection: { conversations: 1 } });
+
+      const conversations = existing?.conversations ?? [];
+      console.log("conversations: ---> ", conversations);
+      const lastConversation = conversations[conversations.length - 1];
+
+      if (!lastConversation || lastConversation.expired) {
+        const conversationNumber =
+          (lastConversation?.conversationNumber ?? 0) + 1;
+        const newConversation = {
+          conversationNumber,
+          resumen_conversacion: "",
+          calificacion: "",
+          createdAt: now,
+          timeToSave,
+          expired: false,
+          fecha: now,
+        };
+        if (!existing) {
+          await clientes.insertOne({
+            telefono: from,
+            conversations: [newConversation],
+          });
+        } else {
+          await clientes.updateOne({ telefono: from }, {
+            $push: { conversations: newConversation },
+          } as any);
+        }
+
+        scheduleLeadExpiration({
+          telefono: from,
+          threadId: from,
+          conversationNumber,
+        });
+      } else {
+        await clientes.updateOne(
+          { telefono: from },
+          { $set: { "conversations.$[conv].fecha": now } },
+          {
+            arrayFilters: [
+              {
+                "conv.conversationNumber": lastConversation.conversationNumber,
+              },
+            ],
+          },
+        );
+      }
+    } finally {
+      await client.close();
+    }
+  } catch (error) {
+    logger.error("Error guardando cliente en MongoDB", error);
+  }
+};

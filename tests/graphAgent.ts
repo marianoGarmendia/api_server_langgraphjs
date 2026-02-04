@@ -475,7 +475,6 @@ const faqNode = async (state: typeof MessagesState.State) => {
 const shouldContinue = (state: typeof MessagesState.State) => {
   const last = state.messages.at(-1) as AIMessage;
   // if (!last || !(last instanceof AIMessage)) return END;
-  console.log("last", last);
   return last?.tool_calls?.length ? "toolNode" : END;
 };
 

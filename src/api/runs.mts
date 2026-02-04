@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { cors } from 'hono/cors';
+import { cors } from "hono/cors";
 
 import { HTTPException } from "hono/http-exception";
 import { streamSSE } from "hono/streaming";
@@ -23,27 +23,30 @@ import {
 import { logError, logger } from "../logging.mjs";
 import { v4 as uuid4 } from "uuid";
 import type { AuthContext } from "../auth/index.mjs";
+import { saveState } from "../kb/savedState.mjs";
 
 const api = new Hono();
 
-api.use('*', cors({
-  origin: (origin) => {
-    // Allow requests from localhost:5173 and your Dev Tunnel URL
-    const allowedOrigins = [
-      
-      'http://localhost:3000',
-      'http://localhost:5173',
-      'https://72jdmlb6-5000.brs.devtunnels.ms'
-    ];
-    return allowedOrigins.includes(origin) ? origin : '';
-  },
-  allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowHeaders: ['Content-Type', 'Authorization'],
-  credentials: true,
-}));
+api.use(
+  "*",
+  cors({
+    origin: (origin) => {
+      // Allow requests from localhost:5173 and your Dev Tunnel URL
+      const allowedOrigins = [
+        "http://localhost:3000",
+        "http://localhost:5173",
+        "https://72jdmlb6-5000.brs.devtunnels.ms",
+      ];
+      return allowedOrigins.includes(origin) ? origin : "";
+    },
+    allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
+  }),
+);
 
-api.options('*', (c) => {
-  return c.text('', 200, {});
+api.options("*", (c) => {
+  return c.text("", 200, {});
 });
 
 const createValidRun = async (
@@ -344,6 +347,13 @@ api.post(
     // Stream Run
     const { thread_id } = c.req.valid("param");
     const payload = c.req.valid("json");
+
+    await saveState({ from: thread_id, source: "web" });
+
+    console.log("---------------------------------");
+    console.log("Streaming run", { payload });
+    console.log("Thread ID", { thread_id });
+    console.log("---------------------------------");
 
     const run = await createValidRun(thread_id, payload, {
       auth: c.var.auth,
