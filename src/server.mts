@@ -24,7 +24,7 @@ import { appendCustomer } from "../tests/sheet/writeSheet.js";
 import { saveState } from "./kb/savedState.mjs";
 
 const app = new Hono();
-const EXPIRATION_MS = 10 * 60 * 1000;
+const EXPIRATION_MS = 2 * 60 * 1000;
 const leadTimers = new Map<
   string,
   { timeout: NodeJS.Timeout; threadId: string; conversationNumber: number }
