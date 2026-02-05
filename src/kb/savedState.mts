@@ -13,6 +13,8 @@ export const saveState = async ({
 }) => {
   const now = new Date();
   const timeToSave = new Date(now.getTime() + EXPIRATION_MS);
+  const nowIso = now.toISOString();
+  const timeToSaveIso = timeToSave.toISOString();
   try {
     const { client, db } = await getMongoClient();
     try {
@@ -21,9 +23,9 @@ export const saveState = async ({
         conversations?: {
           conversationNumber: number;
           expired: boolean;
-          createdAt: Date;
-          timeToSave: Date;
-          fecha: Date;
+          createdAt: string;
+          timeToSave: string;
+          fecha: string;
         }[];
       }>({ telefono: from }, { projection: { conversations: 1 } });
 
@@ -38,10 +40,10 @@ export const saveState = async ({
           conversationNumber,
           resumen_conversacion: "",
           calificacion: "",
-          createdAt: now,
-          timeToSave,
+          createdAt: nowIso,
+          timeToSave: timeToSaveIso,
           expired: false,
-          fecha: now,
+          fecha: nowIso,
         };
         if (!existing) {
           await clientes.insertOne({
@@ -62,7 +64,12 @@ export const saveState = async ({
       } else {
         await clientes.updateOne(
           { telefono: from },
-          { $set: { "conversations.$[conv].fecha": now } },
+          {
+            $set: {
+              "conversations.$[conv].fecha": nowIso,
+              "conversations.$[conv].timeToSave": timeToSaveIso,
+            },
+          },
           {
             arrayFilters: [
               {
