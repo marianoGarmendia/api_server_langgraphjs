@@ -284,7 +284,7 @@ app.post(
       },
       {
         configurable: {
-          thread_id: `${source}:${from}`, // buena práctica: evita colisiones entre canales
+          thread_id: from, // buena práctica: evita colisiones entre canales
           from,
           source,
         },
