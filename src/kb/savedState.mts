@@ -22,7 +22,7 @@ export const saveState = async ({
 }: {
   from: string;
   source: string;
-  numberWithoutPlus: string;
+  numberWithoutPlus?: string;
 }) => {
   const now = new Date();
   const timeToSave = new Date(now.getTime() + EXPIRATION_MS);
@@ -30,7 +30,7 @@ export const saveState = async ({
   const timeToSaveIso = timeToSave.toISOString();
   console.log("saveState from : ---> ", from);
   console.log("saveState numberWithoutPlus: ---> ", numberWithoutPlus);
-  const fromNumber = numberWithoutPlus.startsWith("549")
+  const fromNumber = numberWithoutPlus?.startsWith("549")
     ? numberWithoutPlus
     : from;
   try {
@@ -80,8 +80,8 @@ export const saveState = async ({
 
         console.log("scheduleLeadExpiration: ---> ", fromNumber);
         scheduleLeadExpiration({
-          telefono: fromNumber,
-          threadId: fromNumber,
+          telefono: fromNumber || from,
+          threadId: fromNumber || from,
           conversationNumber,
         });
       } else {
