@@ -181,7 +181,7 @@ export function scheduleLeadExpiration({
   //   return;
   // }
   clearLeadTimer(telefono);
-
+  console.log("clearLeadTimer: ---> ", telefono);
   const timeout = setTimeout(async () => {
     console.log("scheduleLeadExpiration: ---> ", telefono);
     const { client, db } = await getMongoClient();
@@ -279,6 +279,8 @@ app.post(
   ),
   async (c) => {
     const { query, from, source } = c.req.valid("json");
+
+    console.log("llego un mensaje de un usuario");
 
     await saveState({ from, source });
 

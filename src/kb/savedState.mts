@@ -26,6 +26,8 @@ export const saveState = async ({
   const timeToSave = new Date(now.getTime() + EXPIRATION_MS);
   const nowIso = now.toISOString();
   const timeToSaveIso = timeToSave.toISOString();
+  console.log("saveState: ---> ", from);
+
   try {
     const { client, db } = await getMongoClient();
     try {
@@ -71,12 +73,17 @@ export const saveState = async ({
           } as any);
         }
 
+        console.log("scheduleLeadExpiration: ---> ", from);
         scheduleLeadExpiration({
           telefono: from,
           threadId: from,
           conversationNumber,
         });
       } else {
+        console.log("lastConversation is not expired");
+        console.log("timeToSaveIso: ---> ", timeToSaveIso);
+        console.log("nowIso: ---> ", nowIso);
+        console.log("lastConversation.conversationNumber: ---> ", lastConversation.conversationNumber);
         await clientes.updateOne(
           { telefono: from },
           {
