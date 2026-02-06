@@ -4,6 +4,17 @@ import { logger } from "../logging.mjs";
 
 const EXPIRATION_MS = 2 * 60 * 1000;
 
+console.log("boot", new Date().toISOString());
+
+setTimeout(() => {
+  console.log("timeout fired", new Date().toISOString());
+}, 30_000);
+
+// opcional: heartbeat
+setInterval(() => {
+  console.log("alive", new Date().toISOString());
+}, 10_000);
+
 export const saveState = async ({
   from,
   source,

@@ -20,11 +20,15 @@ import { auth } from "./auth/custom.mjs";
 import { registerAuth } from "./auth/index.mjs";
 import { workflow, getStateOfLead, cleanState } from "../tests/graphAgent.js";
 import { getMongoClient } from "./kb/mongoClient.mjs";
+import type { Db } from "mongodb";
 import { appendCustomer } from "../tests/sheet/writeSheet.js";
 import { saveState } from "./kb/savedState.mjs";
 
 const app = new Hono();
 const EXPIRATION_MS = 2 * 60 * 1000;
+const CRON_SECRET = process.env.CRON_SECRET;
+const USE_IN_PROCESS_EXPIRATION =
+  process.env.USE_IN_PROCESS_EXPIRATION === "true";
 const leadTimers = new Map<
   string,
   { timeout: NodeJS.Timeout; threadId: string; conversationNumber: number }
@@ -38,6 +42,132 @@ function clearLeadTimer(telefono: string) {
   }
 }
 
+async function expireLeadConversation({
+  telefono,
+  threadId,
+  conversationNumber,
+  db,
+}: {
+  telefono: string;
+  threadId: string;
+  conversationNumber: number;
+  db: Db;
+}) {
+  try {
+    const state = await getStateOfLead(threadId);
+    const clientes = db.collection("clientes");
+    const result = await clientes.updateOne(
+      { telefono },
+      {
+        $set: {
+          "conversations.$[conv].expired": true,
+          "conversations.$[conv].cliente": state.cliente || "No definido",
+          "conversations.$[conv].fecha": new Date().toISOString(),
+          "conversations.$[conv].resumen_conversacion": state.resumen,
+          "conversations.$[conv].calificacion": state.calificacion,
+          "conversations.$[conv].motivo_calificacion":
+            state.motivo_calificacion,
+          "conversations.$[conv].productos_mencionados":
+            state.productos_mencionados,
+          "conversations.$[conv].siguiente_accion":
+            state.siguiente_accion || "No definida",
+        },
+      },
+      {
+        arrayFilters: [
+          {
+            "conv.conversationNumber": conversationNumber,
+            "conv.expired": false,
+          },
+        ],
+      },
+    );
+
+    // Acá es donde tengo que ir a buscar la informacion del cliente al graph, extraer los datos , grabarlos en la base de datos y en el sheet
+    if (result.modifiedCount > 0) {
+      logger.info("State obtenido por expiración", { threadId });
+      // Actualizar el sheet con la información del cliente
+      const customerSaved = await appendCustomer({
+        cliente: state.cliente || "No definido",
+        telefono: telefono,
+        resumen: state.resumen,
+        calificacion: state.calificacion,
+        motivo_calificacion: state.motivo_calificacion,
+        productos_mencionados: state.productos_mencionados,
+        siguiente_accion: state.siguiente_accion || "No definida",
+        fecha: new Date().toISOString(),
+      });
+
+      if (customerSaved) {
+        logger.info("Cliente agregado correctamente en Google Sheets.");
+      } else {
+        logger.error("Error al agregar cliente en Google Sheets.");
+      }
+
+      // Limpiar el state del graph
+      const cleanStateSaved = await cleanState({ threadId });
+      if (cleanStateSaved.error) {
+        logger.error(
+          "Error al limpiar el estado del graph",
+          cleanStateSaved.error,
+        );
+      }
+
+      if (cleanStateSaved?.success) {
+        logger.info("Estado del graph limpiado correctamente");
+      }
+
+      // Limpiar el state
+      void state;
+    }
+  } catch (error) {
+    logger.error("Error en expiración de cliente", error);
+  }
+}
+
+async function processDueLeadExpirations(limit: number) {
+  const now = new Date();
+  const nowIso = now.toISOString();
+  const { client, db } = await getMongoClient();
+  try {
+    const clientes = db.collection("clientes");
+    const dueConversations = await clientes
+      .aggregate([
+        { $unwind: "$conversations" },
+        {
+          $match: {
+            "conversations.expired": false,
+            $or: [
+              { "conversations.timeToSave": { $lte: nowIso } },
+              { "conversations.timeToSave": { $lte: now } },
+            ],
+          },
+        },
+        {
+          $project: {
+            telefono: 1,
+            conversationNumber: "$conversations.conversationNumber",
+          },
+        },
+        { $limit: limit },
+      ])
+      .toArray();
+
+    for (const item of dueConversations) {
+      await expireLeadConversation({
+        telefono: item.telefono,
+        threadId: item.telefono,
+        conversationNumber: item.conversationNumber,
+        db,
+      });
+    }
+
+    return { processed: dueConversations.length };
+  } finally {
+    await client.close();
+  }
+}
+
 export function scheduleLeadExpiration({
   telefono,
   threadId,
@@ -47,84 +177,18 @@ export function scheduleLeadExpiration({
   threadId: string;
   conversationNumber: number;
 }) {
+  if (!USE_IN_PROCESS_EXPIRATION) {
+    return;
+  }
   clearLeadTimer(telefono);
 
   const timeout = setTimeout(async () => {
+    console.log("scheduleLeadExpiration: ---> ", telefono);
+    const { client, db } = await getMongoClient();
     try {
-      const { client, db } = await getMongoClient();
-      try {
-        const state = await getStateOfLead(threadId);
-        const clientes = db.collection("clientes");
-        const result = await clientes.updateOne(
-          { telefono },
-          {
-            $set: {
-              "conversations.$[conv].expired": true,
-              "conversations.$[conv].cliente": state.cliente || "No definido",
-              "conversations.$[conv].fecha": new Date().toISOString(),
-              "conversations.$[conv].resumen_conversacion": state.resumen,
-              "conversations.$[conv].calificacion": state.calificacion,
-              "conversations.$[conv].motivo_calificacion":
-                state.motivo_calificacion,
-              "conversations.$[conv].productos_mencionados":
-                state.productos_mencionados,
-              "conversations.$[conv].siguiente_accion":
-                state.siguiente_accion || "No definida",
-            },
-          },
-          {
-            arrayFilters: [
-              {
-                "conv.conversationNumber": conversationNumber,
-                "conv.expired": false,
-              },
-            ],
-          },
-        );
-
-        // Acá es donde tengo que ir a buscar la informacion del cliente al graph, extraer los datos , grabarlos en la base de datos y en el sheet
-        if (result.modifiedCount > 0) {
-          logger.info("State obtenido por expiración", { threadId });
-          // Actualizar el sheet con la información del cliente
-          const customerSaved = await appendCustomer({
-            cliente: state.cliente || "No definido",
-            telefono: telefono,
-            resumen: state.resumen,
-            calificacion: state.calificacion,
-            motivo_calificacion: state.motivo_calificacion,
-            productos_mencionados: state.productos_mencionados,
-            siguiente_accion: state.siguiente_accion || "No definida",
-            fecha: new Date().toISOString(),
-          });
-
-          if (customerSaved) {
-            logger.info("Cliente agregado correctamente en Google Sheets.");
-          } else {
-            logger.error("Error al agregar cliente en Google Sheets.");
-          }
-
-          // Limpiar el state del graph
-          const cleanStateSaved = await cleanState({ threadId });
-          if (cleanStateSaved.error) {
-            logger.error(
-              "Error al limpiar el estado del graph",
-              cleanStateSaved.error,
-            );
-          }
-
-          if (cleanStateSaved?.success) {
-            logger.info("Estado del graph limpiado correctamente");
-          }
-
-          // Limpiar el state
-          void state;
-        }
-      } finally {
-        await client.close();
-      }
-    } catch (error) {
-      logger.error("Error en expiración de cliente", error);
+      await expireLeadConversation({ telefono, threadId, conversationNumber, db });
     } finally {
+      await client.close();
       clearLeadTimer(telefono);
     }
   }, EXPIRATION_MS);
@@ -161,6 +225,17 @@ app.use(
 );
 app.use(requestLogger());
 app.get("/info", (c) => c.json({ flags: { assistants: true, crons: false } }));
+app.get("/internal/expire-due-leads", async (c) => {
+  const token = c.req.query("token") ?? c.req.header("x-cron-token");
+  if (CRON_SECRET && token !== CRON_SECRET) {
+    return c.json({ ok: false, error: "unauthorized" }, 401);
+  }
+
+  const limitRaw = c.req.query("limit");
+  const limit = Math.max(1, Math.min(500, Number(limitRaw) || 100));
+  const result = await processDueLeadExpirations(limit);
+  return c.json({ ok: true, ...result });
+});
 
 app.post(
   "/internal/truncate",
