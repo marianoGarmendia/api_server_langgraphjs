@@ -182,6 +182,18 @@ export function scheduleLeadExpiration({
   // }
   clearLeadTimer(telefono);
   console.log("clearLeadTimer: ---> ", telefono);
+
+  /*
+  
+  todo: crear un cron job que se ejecute cada 1 minuto y se fije si hay clientes que expiraron y si hay, se guardan en el sheet y se limpia el state del graph
+  opcion 1:
+  crear un cron job que se ejecute cada 1 minuto y se fije si hay clientes que expiraron y si hay, se guardan en el sheet y se limpia el state del graph
+opcion 2:
+  lo que tienen que comparar es si la fecha actual es igual o mayor al timeToSave del cliente, si es true entonces expiro en true, guardo en sheet, borro el timer, clearTimer , borro el graph y ya no consulto más esa conversacion del cliente, si es false, activo otro timer que verifique nuevamente, un bucle.
+  
+  */
+
+
   const timeout = setTimeout(async () => {
     console.log("scheduleLeadExpiration: ---> ", telefono);
     const { client, db } = await getMongoClient();
