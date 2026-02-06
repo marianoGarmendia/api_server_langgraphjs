@@ -81,9 +81,7 @@ export const saveState = async ({
         });
       } else {
         console.log("lastConversation is not expired");
-        console.log("timeToSaveIso: ---> ", timeToSaveIso);
-        console.log("nowIso: ---> ", nowIso);
-        console.log("lastConversation.conversationNumber: ---> ", lastConversation.conversationNumber);
+       
         await clientes.updateOne(
           { telefono: from },
           {
