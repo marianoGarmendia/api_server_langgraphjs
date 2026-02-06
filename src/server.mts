@@ -27,8 +27,8 @@ import { saveState } from "./kb/savedState.mjs";
 const app = new Hono();
 const EXPIRATION_MS = 2 * 60 * 1000;
 const CRON_SECRET = process.env.CRON_SECRET;
-const USE_IN_PROCESS_EXPIRATION =
-  process.env.USE_IN_PROCESS_EXPIRATION === "true";
+// const USE_IN_PROCESS_EXPIRATION =
+//   process.env.USE_IN_PROCESS_EXPIRATION === "true";
 const leadTimers = new Map<
   string,
   { timeout: NodeJS.Timeout; threadId: string; conversationNumber: number }
@@ -177,9 +177,9 @@ export function scheduleLeadExpiration({
   threadId: string;
   conversationNumber: number;
 }) {
-  if (!USE_IN_PROCESS_EXPIRATION) {
-    return;
-  }
+  // if (!USE_IN_PROCESS_EXPIRATION) {
+  //   return;
+  // }
   clearLeadTimer(telefono);
 
   const timeout = setTimeout(async () => {

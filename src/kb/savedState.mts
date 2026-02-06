@@ -4,16 +4,16 @@ import { logger } from "../logging.mjs";
 
 const EXPIRATION_MS = 2 * 60 * 1000;
 
-console.log("boot", new Date().toISOString());
+// console.log("boot", new Date().toISOString());
 
-setTimeout(() => {
-  console.log("timeout fired", new Date().toISOString());
-}, 30_000);
+// setTimeout(() => {
+//   console.log("timeout fired", new Date().toISOString());
+// }, 30_000);
 
-// opcional: heartbeat
-setInterval(() => {
-  console.log("alive", new Date().toISOString());
-}, 10_000);
+// // opcional: heartbeat
+// setInterval(() => {
+//   console.log("alive", new Date().toISOString());
+// }, 10_000);
 
 export const saveState = async ({
   from,
@@ -41,10 +41,14 @@ export const saveState = async ({
       }>({ telefono: from }, { projection: { conversations: 1 } });
 
       const conversations = existing?.conversations ?? [];
-      console.log("conversations: ---> ", conversations);
+    
       const lastConversation = conversations[conversations.length - 1];
+      if(lastConversation) {
+        console.log("lastConversation: ---> ", lastConversation);
+      }
 
       if (!lastConversation || lastConversation.expired) {
+        console.log("lastConversation is expired or not found");
         const conversationNumber =
           (lastConversation?.conversationNumber ?? 0) + 1;
         const newConversation = {
