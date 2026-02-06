@@ -18,16 +18,21 @@ const EXPIRATION_MS = 2 * 60 * 1000;
 export const saveState = async ({
   from,
   source,
+  numberWithoutPlus,
 }: {
   from: string;
   source: string;
+  numberWithoutPlus: string;
 }) => {
   const now = new Date();
   const timeToSave = new Date(now.getTime() + EXPIRATION_MS);
   const nowIso = now.toISOString();
   const timeToSaveIso = timeToSave.toISOString();
-  console.log("saveState: ---> ", from);
-
+  console.log("saveState from : ---> ", from);
+  console.log("saveState numberWithoutPlus: ---> ", numberWithoutPlus);
+  const fromNumber = numberWithoutPlus.startsWith("549")
+    ? numberWithoutPlus
+    : from;
   try {
     const { client, db } = await getMongoClient();
     try {
@@ -40,12 +45,12 @@ export const saveState = async ({
           timeToSave: string;
           fecha: string;
         }[];
-      }>({ telefono: from }, { projection: { conversations: 1 } });
+      }>({ telefono: fromNumber }, { projection: { conversations: 1 } });
 
       const conversations = existing?.conversations ?? [];
-    
+
       const lastConversation = conversations[conversations.length - 1];
-      if(lastConversation) {
+      if (lastConversation) {
         console.log("lastConversation: ---> ", lastConversation);
       }
 
@@ -64,26 +69,26 @@ export const saveState = async ({
         };
         if (!existing) {
           await clientes.insertOne({
-            telefono: from,
+            telefono: fromNumber,
             conversations: [newConversation],
           });
         } else {
-          await clientes.updateOne({ telefono: from }, {
+          await clientes.updateOne({ telefono: fromNumber }, {
             $push: { conversations: newConversation },
           } as any);
         }
 
-        console.log("scheduleLeadExpiration: ---> ", from);
+        console.log("scheduleLeadExpiration: ---> ", fromNumber);
         scheduleLeadExpiration({
-          telefono: from,
-          threadId: from,
+          telefono: fromNumber,
+          threadId: fromNumber,
           conversationNumber,
         });
       } else {
         console.log("lastConversation is not expired");
-       
+
         await clientes.updateOne(
-          { telefono: from },
+          { telefono: fromNumber },
           {
             $set: {
               "conversations.$[conv].fecha": nowIso,

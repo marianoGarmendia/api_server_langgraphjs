@@ -193,12 +193,16 @@ opcion 2:
   
   */
 
-
   const timeout = setTimeout(async () => {
     console.log("scheduleLeadExpiration: ---> ", telefono);
     const { client, db } = await getMongoClient();
     try {
-      await expireLeadConversation({ telefono, threadId, conversationNumber, db });
+      await expireLeadConversation({
+        telefono,
+        threadId,
+        conversationNumber,
+        db,
+      });
     } finally {
       await client.close();
       clearLeadTimer(telefono);
@@ -287,14 +291,15 @@ app.post(
       query: z.string(),
       from: z.string(),
       source: z.string(),
+      numberWithoutPlus: z.string(),
     }),
   ),
   async (c) => {
-    const { query, from, source } = c.req.valid("json");
+    const { query, from, source, numberWithoutPlus } = c.req.valid("json");
 
     console.log("llego un mensaje de un usuario");
 
-    await saveState({ from, source });
+    await saveState({ from, source, numberWithoutPlus });
 
     // const now = new Date();
     // const timeToSave = new Date(now.getTime() + EXPIRATION_MS);
@@ -366,6 +371,9 @@ app.post(
     // }
 
     // IMPORTANTE: await
+    const fromNumber = numberWithoutPlus.startsWith("549")
+      ? numberWithoutPlus
+      : from;
     const state = await workflow.invoke(
       {
         // IMPORTANTE: si usás MessagesAnnotation, pasá lista de mensajes
@@ -373,8 +381,8 @@ app.post(
       },
       {
         configurable: {
-          thread_id: from, // buena práctica: evita colisiones entre canales
-          from,
+          thread_id: fromNumber, // buena práctica: evita colisiones entre canales
+          from: fromNumber,
           source,
         },
       },
